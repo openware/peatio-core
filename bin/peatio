@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# -*- RUBY -*-
+
+PEATIO_CORE = ENV["PEATIO_CORE"] || File.expand_path(File.join(File.dirname(__FILE__), ".."))
+$: << File.join(PEATIO_CORE, "lib")
+
+require "peatio"
+
+Peatio::Root.run

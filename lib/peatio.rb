@@ -1,5 +1,6 @@
-require "peatio/version"
+require "clamp"
 
-module Peatio
-  # Your code goes here...
-end
+require "peatio/version"
+require "peatio/root"
+
+module Peatio; end
