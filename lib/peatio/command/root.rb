@@ -1,9 +1,8 @@
 
 require "peatio/command/base"
-require "peatio/command/service/root"
-
-require "peatio/command/db/root"
-require "peatio/command/amqp/root"
+require "peatio/command/service"
+require "peatio/command/db"
+require "peatio/command/amqp"
 
 module Peatio
   class Root < Command::Base

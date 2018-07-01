@@ -5,8 +5,8 @@ PEATIO_CORE = ENV["PEATIO_CORE"] || File.expand_path(File.join(File.dirname(__FI
 $: << File.join(PEATIO_CORE, "lib")
 
 require "clamp"
-require "peatio"
 
+require "peatio"
 require "peatio/command/root"
 
 Peatio::Root.run
