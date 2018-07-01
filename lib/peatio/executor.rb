@@ -1,12 +1,12 @@
-require 'mysql2'
-require 'benchmark'
+require "mysql2"
+require "benchmark"
 
 client = Mysql2::Client.new(
-    :host => '172.19.0.3',
-    :username => 'root',
-    :password => 'changeme',
-    :port => 3306,
-    :database => 'peatio_development')
+    host: "172.19.0.3",
+    username: "root",
+    password: "changeme",
+    port: 3306,
+    database: "peatio_development")
 
 queries = [
     "INSERT INTO `trades` (`ask_id`, `ask_member_id`, `bid_id`, `bid_member_id`, `price`, `volume`, `funds`, `market_id`, `trend`, `created_at`, `updated_at`) VALUES (18711, 81, 18708, 82, 0.99999999, 50.0, 49.9999995, 'eurusd', 0, NOW(), NOW())",
@@ -21,7 +21,7 @@ queries = [
 puts Benchmark.measure {
     1_000.times {
 
-        client.query('begin')
+        client.query("begin")
         begin
 
             100.times {
@@ -30,13 +30,13 @@ puts Benchmark.measure {
                 end
             }
 
-        rescue Exception => e
+        rescue Mysql2::Error => e
             puts "+++++++ DB ERROR - ROLLING BACK ++++++++"
             puts e
-            client.query('rollback')
+            client.query("rollback")
             exit
         end
-        client.query('commit') #commit the changes to the DB
+        client.query("commit") #commit the changes to the DB
 
     }
 }
