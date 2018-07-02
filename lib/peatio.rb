@@ -1,4 +1,5 @@
-require "peatio/version"
+require "mysql2"
 
-module Peatio
-end
+require "peatio/version"
+require "peatio/sql/client"
+require "peatio/sql/schema"
