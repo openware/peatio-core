@@ -6,4 +6,4 @@ $: << File.join(PEATIO_CORE, "lib")
 
 require "peatio"
 
-Peatio::Root.run
+Peatio::CLI.run!
