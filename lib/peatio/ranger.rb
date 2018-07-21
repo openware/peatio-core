@@ -3,12 +3,12 @@ module Peatio::Ranger
     puts "[INFO] Starting the server"
 
     EM.run do
-      ::Peatio::MQ::Client.new(host: "0.0.0.0")
-      ::Peatio::MQ::Events.subscribe!
+      Peatio::MQ::Client.new(host: "0.0.0.0")
+      Peatio::MQ::Events.subscribe!
 
       EM::WebSocket.start(host: "0.0.0.0", port: 8081) do |ws|
         ws.onopen do |id|
-          ws.instance_variable_set(:@connection_handler, ::Peatio::MQ::Events::SocketHandler.new(ws, id))
+          ws.instance_variable_set(:@connection_handler, Peatio::MQ::Events::SocketHandler.new(ws, id))
         end
 
         ws.onclose { puts "Connection closed" }
