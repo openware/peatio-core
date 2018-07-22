@@ -1,7 +1,7 @@
 module Peatio::MQ::Events
   def self.subscribe!
-    puts "[INFO] Starting to listen the queues..."
-    Private.subscribe!
+    Peatio::Logger.info "Starting to listen the queues..."
+    Public.subscribe!
   end
 
   class SocketHandler
@@ -9,7 +9,7 @@ module Peatio::MQ::Events
 
     class << self
       def all
-        pp @@all
+        @@all
       end
     end
 
@@ -33,7 +33,7 @@ module Peatio::MQ::Events
 
       def watch(route, &block)
         bind_queue_for(route).subscribe do |metadata, payload|
-          puts "[DEBUG] #{JSON.parse(payload).to_json}"
+          Peatio::Logger.debug "#{payload}"
           block.call(payload, metadata)
         end
       end
@@ -50,26 +50,26 @@ module Peatio::MQ::Events
     end
   end
 
-  class Private < Base
+  class Public < Base
     def self.subscribe!
       events_type "market"
 
       watch("eurusd.order_created") do |payload, metadata|
-        puts "[DEBUG] got a new order"
+        Peatio::Logger.debug "received order_created event"
         SocketHandler.all.each do |s|
           s.send_payload payload
         end
       end
 
       watch("eurusd.order_canceled") do |payload, metadata|
-        puts "[DEBUG] order canceled"
+        Peatio::Logger.debug "received order_canceled event"
         SocketHandler.all.each do |s|
           s.send_payload payload
         end
       end
 
       watch("eurusd.trade_completed") do |payload, metadata|
-        puts "[DEBUG] got a new trade"
+        Peatio::Logger.debug "received trade_completed event"
         SocketHandler.all.each do |s|
           s.send_payload payload
         end
