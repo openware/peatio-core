@@ -1,7 +1,7 @@
 module Peatio::MQ::Events
   def self.subscribe!
-    Peatio::Logger.info "Starting to listen the queues..."
-    Public.subscribe!
+    markets = %w{eurusd}
+    Public.subscribe!(markets)
   end
 
   class SocketHandler
@@ -32,6 +32,8 @@ module Peatio::MQ::Events
       end
 
       def watch(route, &block)
+        Peatio::Logger.info "Starting to listen the queue route #{route}"
+
         bind_queue_for(route).subscribe do |metadata, payload|
           Peatio::Logger.debug "#{payload}"
           block.call(payload, metadata)
@@ -51,27 +53,29 @@ module Peatio::MQ::Events
   end
 
   class Public < Base
-    def self.subscribe!
+    def self.subscribe!(markets)
       events_type "market"
 
-      watch("eurusd.order_created") do |payload, metadata|
-        Peatio::Logger.debug "received order_created event"
-        SocketHandler.all.each do |s|
-          s.send_payload payload
+      markets.each do |market|
+        watch("#{market}.order_created") do |payload, metadata|
+          Peatio::Logger.debug "received order_created event"
+          SocketHandler.all.each do |s|
+            s.send_payload payload
+          end
         end
-      end
 
-      watch("eurusd.order_canceled") do |payload, metadata|
-        Peatio::Logger.debug "received order_canceled event"
-        SocketHandler.all.each do |s|
-          s.send_payload payload
+        watch("#{market}.order_canceled") do |payload, metadata|
+          Peatio::Logger.debug "received order_canceled event"
+          SocketHandler.all.each do |s|
+            s.send_payload payload
+          end
         end
-      end
 
-      watch("eurusd.trade_completed") do |payload, metadata|
-        Peatio::Logger.debug "received trade_completed event"
-        SocketHandler.all.each do |s|
-          s.send_payload payload
+        watch("#{market}.trade_completed") do |payload, metadata|
+          Peatio::Logger.debug "received trade_completed event"
+          SocketHandler.all.each do |s|
+            s.send_payload payload
+          end
         end
       end
     end
