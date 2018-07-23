@@ -5,7 +5,7 @@ module Peatio::Ranger
     logger.info "Starting the server on port #{port}"
 
     EM.run do
-      Peatio::MQ::Client.new(host: "0.0.0.0")
+      Peatio::MQ::Client.new
       Peatio::MQ::Events.subscribe!
 
       EM::WebSocket.start(host: "0.0.0.0", port: port) do |ws|

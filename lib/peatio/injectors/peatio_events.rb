@@ -12,29 +12,24 @@ module Peatio::Injectors
       @exchange_name = "peatio.events.market"
 
       EventMachine.run do
-        AMQP.start(host: "localhost") do |connection|
-          logger.info "Connected to RabbitMQ"
-          AMQP::Channel.new do |channel, open_ok|
-            logger.info "Channel ##{channel.id} is now open!"
-            AMQP::Exchange.new(channel, :direct, @exchange_name) do |exchange, declare_ok|
-              logger.info "Exchange #{exchange.name} is ready to go"
-              next_message(connection, exchange)
-            end
-          end
+        Peatio::MQ::Client.new
+        AMQP::Exchange.new(Peatio::MQ::Client.channel, :direct, @exchange_name) do |exchange, declare_ok|
+          logger.info "Exchange #{exchange.name} is ready to go"
+          next_message(exchange)
         end
       end
     end
 
-    def next_message(connection, exchange)
+    def next_message(exchange)
       if message = @messages.shift
         event_name, data = message
         serialized_data = JSON.dump(data)
         exchange.publish(serialized_data, routing_key: event_name) do
           logger.debug { "event #{event_name} sent with data: #{serialized_data}" }
-          next_message(connection, exchange)
+          next_message(exchange)
         end
       else
-        connection.close { EventMachine.stop }
+        Peatio::MQ::Client.disconnect { EventMachine.stop }
       end
     end
 
