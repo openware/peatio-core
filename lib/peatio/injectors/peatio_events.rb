@@ -13,7 +13,7 @@ module Peatio::Injectors
 
       EventMachine.run do
         Peatio::MQ::Client.new
-        AMQP::Exchange.new(Peatio::MQ::Client.channel, :direct, @exchange_name) do |exchange, declare_ok|
+        AMQP::Exchange.new(Peatio::MQ::Client.channel, :topic, @exchange_name) do |exchange, declare_ok|
           logger.info "Exchange #{exchange.name} is ready to go"
           next_message(exchange)
         end
