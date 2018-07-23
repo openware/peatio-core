@@ -13,9 +13,8 @@ module Peatio::MQ::Events
       end
     end
 
-    def initialize(socket, id)
+    def initialize(socket)
       @socket = socket
-      @id = id
       @@all << self
     end
 

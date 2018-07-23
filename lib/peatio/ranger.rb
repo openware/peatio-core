@@ -10,10 +10,11 @@ module Peatio::Ranger
 
       EM::WebSocket.start(host: "0.0.0.0", port: port) do |ws|
         ws.onopen do |id|
-          ws.instance_variable_set(:@connection_handler, Peatio::MQ::Events::SocketHandler.new(ws, id))
+          logger.info "WebSocket connection openned"
+          ws.instance_variable_set(:@connection_handler, Peatio::MQ::Events::SocketHandler.new(ws))
         end
 
-        ws.onclose { logger.info "Connection closed" }
+        ws.onclose { logger.info "WebSocket connection closed" }
 
         # ws.onmessage do |msg|
         #   logger.debug "Recieved message: #{msg}"
