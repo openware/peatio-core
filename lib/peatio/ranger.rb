@@ -10,18 +10,18 @@ module Peatio::Ranger
 
       EM::WebSocket.start(host: "0.0.0.0", port: port) do |ws|
         ws.onopen do |id|
-          logger.info "WebSocket connection openned"
+          logger.info "ranger: WebSocket connection openned"
 
           ws.instance_variable_set(
             :@connection_handler,
-            Peatio::MQ::Events::SocketHandler.new(ws)
+            Peatio::MQ::Events::SocketHandler.new(ws, "eurusd.order_created")
           )
         end
 
-        ws.onclose { logger.info "WebSocket connection closed" }
+        ws.onclose { logger.info "ranger: WebSocket connection closed" }
 
         ws.onerror { |e|
-          puts "Error: #{e.message}"
+          puts "ranger: WebSocket Error: #{e.message}"
         }
       end
     end
