@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Command
   class Base < Clamp::Command
     def say(str)

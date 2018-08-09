@@ -1,5 +1,4 @@
 # frozen_string_literal: true
 
-module Peatio
-  VERSION = "0.4.2"
+module Peatio::Upstream
 end

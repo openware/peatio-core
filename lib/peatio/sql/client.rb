@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Sql
   class Client
     attr_accessor :client, :config

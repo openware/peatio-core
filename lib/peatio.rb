@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "logger"
 require "json"
 require "mysql2"
@@ -16,4 +18,6 @@ module Peatio
   require_relative "peatio/ranger"
   require_relative "peatio/injectors/peatio_events"
   require_relative "peatio/auth/jwt_authenticator"
+  require_relative "peatio/upstream"
+  require_relative "peatio/upstream/binance"
 end

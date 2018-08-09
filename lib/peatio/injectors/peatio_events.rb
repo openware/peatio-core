@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Injectors
   class PeatioEvents
     attr_accessor :market, :seller_uid, :buyer_uid, :logger

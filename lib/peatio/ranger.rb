@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Ranger
   class Connection
     def initialize(authenticator, socket, logger)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Command
   class Inject < Peatio::Command::Base
     class PeatioEvents < Peatio::Command::Base

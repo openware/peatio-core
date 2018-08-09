@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 # -*- RUBY -*-
 
 PEATIO_CORE = ENV["PEATIO_CORE"] || File.expand_path(File.join(File.dirname(__FILE__), ".."))
