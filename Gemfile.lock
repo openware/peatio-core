@@ -2,17 +2,31 @@ PATH
   remote: .
   specs:
     peatio (0.1.0)
+      amqp
       clamp
+      em-websocket
+      eventmachine
+      mysql2
 
 GEM
   remote: https://rubygems.org/
   specs:
+    amq-protocol (2.3.0)
+    amqp (1.8.0)
+      amq-protocol (>= 2.2.0)
+      eventmachine
     ast (2.4.0)
     clamp (1.3.0)
     diff-lcs (1.3)
     docile (1.3.1)
+    em-websocket (0.5.1)
+      eventmachine (>= 0.12.9)
+      http_parser.rb (~> 0.6.0)
+    eventmachine (1.2.7)
+    http_parser.rb (0.6.0)
     jaro_winkler (1.5.1)
     json (2.1.0)
+    mysql2 (0.5.2)
     parallel (1.12.1)
     parser (2.5.1.0)
       ast (~> 2.4.0)
@@ -69,4 +83,4 @@ DEPENDENCIES
   simplecov-json
 
 BUNDLED WITH
-   1.16.2
+   1.16.3

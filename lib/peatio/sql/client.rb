@@ -2,7 +2,7 @@ module Peatio::Sql
   class Client
     attr_accessor :client, :config
 
-    def initialize(options = {})
+    def initialize
       @config = {
         host: ENV["DATABASE_HOST"] || "localhost",
         username: ENV["DATABASE_USER"] || "root",
