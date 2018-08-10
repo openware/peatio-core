@@ -9,6 +9,7 @@ PATH
       eventmachine
       faye-websocket
       mysql2
+      openssl
 
 GEM
   remote: https://rubygems.org/
@@ -43,6 +44,7 @@ GEM
     jaro_winkler (1.5.1)
     json (2.1.0)
     mysql2 (0.5.2)
+    openssl (2.1.1)
     parallel (1.12.1)
     parser (2.5.1.0)
       ast (~> 2.4.0)

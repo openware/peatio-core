@@ -3,6 +3,7 @@
 require "faye/websocket"
 require "em-http-request"
 require "json"
+require "openssl"
 
 module Peatio::Upstream::Binance
   class Orderbook
@@ -58,14 +59,25 @@ module Peatio::Upstream::Binance
 
     def initialize
       @config = {
-        api_key: ENV["UPSTREAM_BINANCE_API_KEY"],
-        secret_key: ENV["UPSTREAM_BINANCE_SECRET_KEY"],
+        :api_key => ENV["UPSTREAM_BINANCE_API_KEY"] || "",
+        :secret_key => ENV["UPSTREAM_BINANCE_SECRET_KEY"] || "",
       }
     end
 
     def stream_connect!(streams)
       @stream = ::Faye::WebSocket::Client.new(
         "wss://stream.binance.com:9443/stream?streams=" + streams
+      )
+    end
+
+    def sign!(data)
+      raise "Upstream Binance Secret Key is not specified, unable to obtain signature for Binance REST API" \
+        unless @config[:secret_key] != ""
+
+      OpenSSL::HMAC.hexdigest(
+        OpenSSL::Digest.new('sha256'),
+        @config[:secret_key],
+        data
       )
     end
   end
@@ -90,6 +102,10 @@ module Peatio::Upstream::Binance
     EM.run {
       client = Client.new
       client.stream_connect! streams
+
+      signature = client.sign! "132123"
+      puts "binance.rb:107: signature: #{signature}"
+
       client.stream.on :open do |event|
         logger.info "streams connected: " + streams
       end
