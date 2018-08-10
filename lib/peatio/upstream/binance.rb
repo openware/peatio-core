@@ -62,6 +62,9 @@ module Peatio::Upstream::Binance
         :api_key => ENV["UPSTREAM_BINANCE_API_KEY"] || "",
         :secret_key => ENV["UPSTREAM_BINANCE_SECRET_KEY"] || "",
       }
+
+      raise "Upstream Binance API Key is not specified" if @config[:api_key] == ""
+      raise "Upstream Binance Secret Key is not specified" if @config[:secret_key] == ""
     end
 
     def stream_connect!(streams)
@@ -70,15 +73,41 @@ module Peatio::Upstream::Binance
       )
     end
 
-    def sign!(data)
-      raise "Upstream Binance Secret Key is not specified, unable to obtain signature for Binance REST API" \
-        unless @config[:secret_key] != ""
-
+    def self.sign!(data)
       OpenSSL::HMAC.hexdigest(
-        OpenSSL::Digest.new('sha256'),
+        OpenSSL::Digest.new("sha256"),
         @config[:secret_key],
         data
       )
+    end
+
+    def submit_order(symbol, side, type, quantity, price = nil)
+      raise "Invalid order: unexpected order side: #{side}" unless ["BUY", "SELL"].include?(side)
+      raise "Invalid order: unexpected order type: #{type}" unless ["LIMIT", "MARKET"].include?(type)
+      raise "Invalid order: price is not specified for LIMIT order" if price.nil? and type == "LIMIT"
+
+      query = []
+      query << ["symbol", symbol]
+      query << ["side", side]
+      query << ["type", type]
+      query << ["timeInForce", timeInForce]
+      query << ["quantity", quantity]
+      query << ["newOrderRespType", "FULL"]
+
+      if !price.nil?
+        query << ["price", price]
+      end
+
+      query << ["timestamp", Time.now.to_i]
+
+      # we can specify our own unique order id
+      #query << ["newClientOrderId", ""]
+
+      signature = self.sign!(URI.encode_www_form(query))
+
+      query << ["signature", signature]
+
+      header = {'X-MBX-APIKEY': @config[:api_key]}
     end
   end
 
@@ -102,9 +131,6 @@ module Peatio::Upstream::Binance
     EM.run {
       client = Client.new
       client.stream_connect! streams
-
-      signature = client.sign! "132123"
-      puts "binance.rb:107: signature: #{signature}"
 
       client.stream.on :open do |event|
         logger.info "streams connected: " + streams
@@ -134,7 +160,7 @@ module Peatio::Upstream::Binance
           "id #{generation} processed: " \
           "%+d bids, %+d asks" % [
             bids,
-            asks
+            asks,
           ]
       end
 
@@ -162,8 +188,8 @@ module Peatio::Upstream::Binance
           asks = payload["asks"]
 
           logger.info "[#{symbol}] orderbook snapshot loaded: " \
-            "(#{bids.length} bids, #{asks.length} asks), "\
-            "id #{generation}"
+                      "(#{bids.length} bids, #{asks.length} asks), " \
+                      "id #{generation}"
 
           orderbooks[symbol].commit(generation) {
             payload["bids"].each do |(price, volume)|
