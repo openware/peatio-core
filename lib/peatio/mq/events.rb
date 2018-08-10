@@ -48,7 +48,6 @@ module Peatio::MQ::Events
       Peatio::MQ::Client.channel
         .queue(queue_name, durable: false, auto_delete: true)
         .bind(exchange, routing_key: "#").subscribe do |metadata, payload|
-
         Peatio::Logger.debug { "event received: #{payload}" }
 
         event = metadata.routing_key
@@ -61,5 +60,4 @@ module Peatio::MQ::Events
       end
     end
   end
-
 end

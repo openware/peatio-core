@@ -8,8 +8,14 @@ module Peatio::Ranger
       Peatio::MQ::Client.new
       Peatio::MQ::Events.subscribe!
 
-      EM::WebSocket.start(host: "0.0.0.0", port: port) do |ws|
-        ws.onopen do |id|
+      EM::WebSocket.start(
+        host: "0.0.0.0",
+        port: port,
+        secure: true,
+      ) do |ws|
+        ws.onopen do |handshake|
+          query = Hash[URI::decode_www_form(handshake)]
+
           logger.info "ranger: WebSocket connection openned"
 
           ws.instance_variable_set(
