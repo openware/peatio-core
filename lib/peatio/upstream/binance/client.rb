@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Peatio::Upstream::Binance::Client
   @@uri_rest = "https://www.binance.com"
   @@uri_ws = "wss://stream.binance.com:9443"
@@ -6,10 +8,10 @@ class Peatio::Upstream::Binance::Client
 
   def initialize
     @config = {
-      :api_key => ENV["UPSTREAM_BINANCE_API_KEY"] || "",
-      :secret_key => ENV["UPSTREAM_BINANCE_SECRET_KEY"] || "",
-      :uri_rest => ENV["UPSTREAM_BINANCE_URI_REST"] || @@uri_rest,
-      :uri_ws => ENV["UPSTREAM_BINANCE_URI_WS"] || @@uri_ws,
+      api_key: ENV["UPSTREAM_BINANCE_API_KEY"] || "",
+      secret_key: ENV["UPSTREAM_BINANCE_SECRET_KEY"] || "",
+      uri_rest: ENV["UPSTREAM_BINANCE_URI_REST"] || @@uri_rest,
+      uri_ws: ENV["UPSTREAM_BINANCE_URI_WS"] || @@uri_ws,
     }
 
     raise "Upstream Binance API Key is not specified" if @config[:api_key] == ""

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Peatio::Upstream::Binance::Orderbook
   class Entry
     attr_accessor :volume, :generation
