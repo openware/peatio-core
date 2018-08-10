@@ -94,6 +94,10 @@ module Peatio::Upstream::Binance
         logger.info "streams connected: " + streams
       end
 
+      client.stream.on :error do |message|
+        logger.error message
+      end
+
       client.stream.on :message do |message|
         payload = JSON.parse(message.data)
         symbol, stream = payload["stream"].split("@")
