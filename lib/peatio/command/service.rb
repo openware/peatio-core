@@ -46,11 +46,11 @@ module Peatio::Command::Service
               asks, bids = orderbook.depth(5)
 
               asks.each do |(price, volume)|
-                logger.info "[#{symbol}] ASK #{price} #{volume}"
+                logger.info "[#{symbol}] {orderbook} ASK #{price} #{volume}"
               end
 
               bids.each do |(price, volume)|
-                logger.info "[#{symbol}] BID #{price} #{volume}"
+                logger.info "[#{symbol}] {orderbook} BID #{price} #{volume}"
               end
             end
           end
