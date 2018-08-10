@@ -20,15 +20,28 @@ module Peatio::Command::Service
     end
 
     class UpstreamBinance < Peatio::Command::Base
+      option(
+        ["-m", "--market"], "MARKET...",
+        "markets to listen",
+        multivalued: true,
+        required: true,
+      )
+
+      option(
+        ["--dump-interval"], "INTERVAL",
+        "interval in seconds for dumping orderbook",
+        default: 5,
+      ) { |v| Integer(v) }
+
       def execute
         EM.run {
           orderbooks = ::Peatio::Upstream::Binance.run!(
-            markets: ["ethbtc"],
+            markets: market_list,
           )
 
           logger = Peatio::Upstream::Binance.logger
 
-          EM::PeriodicTimer.new(5) do
+          EM::PeriodicTimer.new(dump_interval) do
             orderbooks.each do |symbol, orderbook|
               asks, bids = orderbook.depth(5)
 

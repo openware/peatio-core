@@ -24,7 +24,8 @@ module Peatio::Upstream::Binance
 
     request.errback {
       logger.fatal "unable to request market depth for %s" % symbol
-      EM.stop
+
+      raise
     }
 
     request.callback {
@@ -33,6 +34,8 @@ module Peatio::Upstream::Binance
           "unexpected HTTP status code from binance: " \
           "#{request.response_header.status} #{request.response}"
         )
+
+        raise
       end
 
       payload = JSON.parse(request.response)
