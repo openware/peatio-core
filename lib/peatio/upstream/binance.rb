@@ -53,6 +53,23 @@ module Peatio::Upstream::Binance
     end
   end
 
+  class Client
+    attr_accessor :client, :config, :stream
+
+    def initialize
+      @config = {
+        api_key: ENV["UPSTREAM_BINANCE_API_KEY"],
+        secret_key: ENV["UPSTREAM_BINANCE_SECRET_KEY"],
+      }
+    end
+
+    def stream_connect!(streams)
+      @stream = ::Faye::WebSocket::Client.new(
+        "wss://stream.binance.com:9443/stream?streams=" + streams
+      )
+    end
+  end
+
   module_function
 
   def logger
@@ -71,15 +88,13 @@ module Peatio::Upstream::Binance
     streams = markets.map { |market| market + "@depth" }.join("/")
 
     EM.run {
-      ws = ::Faye::WebSocket::Client.new(
-        "wss://stream.binance.com:9443/stream?streams=" + streams
-      )
-
-      ws.on :open do |event|
+      client = Client.new
+      client.stream_connect! streams
+      client.stream.on :open do |event|
         logger.info "streams connected: " + streams
       end
 
-      ws.on :message do |message|
+      client.stream.on :message do |message|
         payload = JSON.parse(message.data)
         symbol, stream = payload["stream"].split("@")
 
