@@ -4,23 +4,39 @@ module Peatio::MQ::Events
     ranger.subscribe
   end
 
-  def self.start!
+  def self.publish(event, payload)
+    @@client ||= begin
+      ranger = RangerEvents.new
+      ranger.connect
+      ranger
+    end
+
+    @@client.publish(event, payload) do
+      yield if block_given?
+    end
   end
 
   class SocketHandler
-    attr_accessor :event
+    attr_accessor :streams, :authorized, :user
 
     @@all = []
 
-    class << self
-      def all
-        @@all
-      end
+    def self.all
+      @@all
     end
 
-    def initialize(socket, event)
+    def initialize(socket, streams)
       @socket = socket
-      @event = event
+      @streams = streams
+
+      @user = ""
+      @authorized = false
+
+      @socket.onmessage { |msg|
+        @authorized = true
+        @user = msg
+      }
+
       @@all << self
     end
 
@@ -36,6 +52,20 @@ module Peatio::MQ::Events
       @exchange_name = "peatio.events.market"
     end
 
+    def connect
+      @exchange = Peatio::MQ::Client.channel.topic(@exchange_name)
+    end
+
+    def publish(event, payload)
+      serialized_data = JSON.dump(payload)
+
+      @exchange.publish(serialized_data, routing_key: event) do
+        Peatio::Logger::debug { "published event to #{event} " }
+
+        yield if block_given?
+      end
+    end
+
     def subscribe
       require "socket"
 
@@ -48,12 +78,17 @@ module Peatio::MQ::Events
       Peatio::MQ::Client.channel
         .queue(queue_name, durable: false, auto_delete: true)
         .bind(exchange, routing_key: "#").subscribe do |metadata, payload|
-        Peatio::Logger.debug { "event received: #{payload}" }
 
-        event = metadata.routing_key
+        #Peatio::Logger.debug { "event received: #{payload}" }
+
+        stream = metadata.routing_key
 
         SocketHandler.all.each do |handler|
-          if event == handler.event
+          if !handler.authorized
+            next
+          end
+
+          if handler.streams.include?(stream)
             handler.send_payload payload
           end
         end

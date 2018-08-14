@@ -1,5 +1,5 @@
 module Peatio::Ranger
-  def start_server!
+  def run!
     host = ENV["RANGER_HOST"] || "0.0.0.0"
     port = ENV["RANGER_PORT"] || "8081"
 
@@ -14,21 +14,29 @@ module Peatio::Ranger
         host: host,
         port: port,
         secure: true,
-      ) do |ws|
-        ws.onopen do |handshake|
-          query = URI::decode_www_form(handshake)
+      ) do |socket|
+        socket.onopen do |handshake|
+          query = URI::decode_www_form(handshake.query_string)
+          streams = query.map { |item|
+            if item.first == "stream"
+              item.last
+            end
+          }
 
-          logger.info "ranger: WebSocket connection openned"
+          logger.info "ranger: WebSocket connection openned, streams: #{streams}"
 
-          ws.instance_variable_set(
+          socket.instance_variable_set(
             :@connection_handler,
-            Peatio::MQ::Events::SocketHandler.new(ws, "eurusd.order_created")
+            Peatio::MQ::Events::SocketHandler.new(
+              socket,
+              streams
+            )
           )
         end
 
-        ws.onclose { logger.info "ranger: WebSocket connection closed" }
+        socket.onclose { logger.info "ranger: WebSocket connection closed" }
 
-        ws.onerror { |e|
+        socket.onerror { |e|
           puts "ranger: WebSocket Error: #{e.message}"
         }
       end
