@@ -1,7 +1,9 @@
 module Peatio::Ranger
-  def run!
+  def start_server!
+    host = ENV["RANGER_HOST"] || "0.0.0.0"
+    port = ENV["RANGER_PORT"] || "8081"
+
     logger = Peatio::Logger.logger
-    port = 8081
     logger.info "Starting the server on port #{port}"
 
     EM.run do
@@ -9,12 +11,12 @@ module Peatio::Ranger
       Peatio::MQ::Events.subscribe!
 
       EM::WebSocket.start(
-        host: "0.0.0.0",
+        host: host,
         port: port,
         secure: true,
       ) do |ws|
         ws.onopen do |handshake|
-          query = Hash[URI::decode_www_form(handshake)]
+          query = URI::decode_www_form(handshake)
 
           logger.info "ranger: WebSocket connection openned"
 
