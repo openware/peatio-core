@@ -13,15 +13,15 @@ module Peatio::Injectors
 
       EventMachine.run do
         Peatio::MQ::Client.new
-        inject_message()
+        inject_message
       end
     end
 
-    def inject_message()
+    def inject_message
       if message = @messages.shift
         type, id, event, data = message
         Peatio::MQ::Events.publish(type, id, event, data) {
-          inject_message()
+          inject_message
         }
       else
         Peatio::MQ::Client.disconnect { EventMachine.stop }

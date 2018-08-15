@@ -90,7 +90,8 @@ module Peatio::Auth
 
       decode_and_verify_token(token_value)
     rescue => error
-      if Peatio::Auth::Error === error
+      case error
+      when Peatio::Auth::Error
         raise(error)
       else
         raise(Peatio::Auth::Error, e.inspect)
