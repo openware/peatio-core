@@ -15,9 +15,9 @@ module Peatio::Auth
   # * JWT_EXPIRATION_LEEWAY
   # * JWT_NOT_BEFORE_LEEWAY
   #
-  # Refer to jwt/ruby-jwt for more information[https://github.com/jwt/ruby-jwt]
+  # @see https://github.com/jwt/ruby-jwt JWT validation parameters.
   #
-  # ===== Example:
+  # @example Token validation
   #   rsa_private = OpenSSL::PKey::RSA.generate(2048)
   #   rsa_public = rsa_private.public_key
   #
@@ -42,7 +42,6 @@ module Peatio::Auth
   #
   #   auth = Peatio::Auth::JWTAuthenticator.new(rsa_public)
   #   auth.authenticate!("Bearer #{token}")
-
   class JWTAuthenticator
     @@verify_options = {
       verify_expiration: true,
@@ -64,8 +63,8 @@ module Peatio::Auth
 
     # Creates new authenticator with given public key.
     #
-    # ===== Arguments:
-    # public_key:: OpenSSL public key object to verify signature.
+    # @param public_key [OpenSSL::PKey::PKey] Public key object to verify
+    #   signature.
     def initialize(public_key)
       @public_key = public_key
     end
@@ -73,14 +72,10 @@ module Peatio::Auth
     # Decodes and verifies JWT.
     # Returns payload from JWT or raises an exception
     #
-    # ===== Arguments:
-    # token:: Token string. Must start from <tt>"Bearer "</tt>.
+    # @param token [String] Token string. Must start from <tt>"Bearer "</tt>.
+    # @return [Hash] Payload Hash from JWT without any changes.
     #
-    # ===== Returns:
-    # Payload Hash from JWT without any changes.
-    #
-    # ===== Exceptions:
-    # Peatio::Auth::Error:: If token is invalid or can't be verified.
+    # @raise [Peatio::Auth::Error] If token is invalid or can't be verified.
     def authenticate!(token)
       token_type, token_value = token.to_s.split(" ")
 
