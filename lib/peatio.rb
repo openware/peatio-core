@@ -1,7 +1,7 @@
 require "logger"
 require "json"
 require "mysql2"
-require "amqp"
+require "bunny"
 require "eventmachine"
 require "em-websocket"
 

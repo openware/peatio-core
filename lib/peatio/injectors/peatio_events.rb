@@ -13,6 +13,8 @@ module Peatio::Injectors
 
       EventMachine.run do
         Peatio::MQ::Client.new
+        Peatio::MQ::Client.connect!
+        Peatio::MQ::Client.create_channel!
         inject_message
       end
     end

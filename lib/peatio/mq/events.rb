@@ -1,3 +1,5 @@
+require "socket"
+
 module Peatio::MQ::Events
   def self.subscribe!
     ranger = RangerEvents.new
@@ -7,7 +9,7 @@ module Peatio::MQ::Events
   def self.publish(type, id, event, payload)
     @@client ||= begin
       ranger = RangerEvents.new
-      ranger.connect
+      ranger.connect!
       ranger
     end
 
@@ -55,7 +57,7 @@ module Peatio::MQ::Events
       @exchange_name = "peatio.events.market"
     end
 
-    def connect
+    def connect!
       @exchange = Peatio::MQ::Client.channel.topic(@exchange_name)
     end
 
@@ -63,16 +65,14 @@ module Peatio::MQ::Events
       routing_key = [type, id, event].join(".")
       serialized_data = JSON.dump(payload)
 
-      @exchange.publish(serialized_data, routing_key: routing_key) do
-        Peatio::Logger::debug { "published event to #{routing_key} " }
+      @exchange.publish(serialized_data, routing_key: routing_key)
 
-        yield if block_given?
-      end
+      Peatio::Logger::debug { "published event to #{routing_key} " }
+
+      yield if block_given?
     end
 
     def subscribe
-      require "socket"
-
       exchange = Peatio::MQ::Client.channel.topic(@exchange_name)
 
       suffix = "#{Socket.gethostname.split(/-/).last}#{Random.rand(10_000)}"
@@ -81,20 +81,19 @@ module Peatio::MQ::Events
 
       Peatio::MQ::Client.channel
         .queue(queue_name, durable: false, auto_delete: true)
-        .bind(exchange, routing_key: "#").subscribe do |metadata, payload|
-
-        #Peatio::Logger.debug { "event received: #{payload}" }
+        .bind(exchange, routing_key: "#").subscribe do |delivery_info, metadata, payload|
 
         # type@id@event
         # type can be public|private
         # id can be user id or market
         # event can be anything like order_completed or just trade
 
-        routing_key = metadata.routing_key
+        routing_key = delivery_info.routing_key
         if routing_key.count(".") != 2
-          Peatio::Logger::error {
+          Peatio::Logger::error do
             "got invalid routing key from amqp: #{routing_key}"
-          }
+          end
+
           next
         end
 
