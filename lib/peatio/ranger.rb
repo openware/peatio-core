@@ -42,6 +42,4 @@ module Peatio::Ranger
       end
     end
   end
-
-  module_function :run!
 end
