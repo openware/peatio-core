@@ -16,7 +16,7 @@ module Peatio::MQ::Events
     end
   end
 
-  class SocketHandler
+  class Client
     attr_accessor :streams, :authorized, :user
 
     @@all = []
@@ -39,13 +39,6 @@ module Peatio::MQ::Events
 
       @user = ""
       @authorized = false
-
-      @socket.onmessage { |msg|
-        msg.strip!
-
-        @authorized = true
-        @user = msg
-      }
 
       @@all << self
     end
@@ -108,7 +101,7 @@ module Peatio::MQ::Events
         type, id, event = routing_key.split(".")
 
         if type == "private"
-          SocketHandler.user(id) do |handler|
+          Client.user(id) do |handler|
             if handler.streams.include?(event)
               handler.send_payload payload
             end
@@ -119,7 +112,7 @@ module Peatio::MQ::Events
 
         stream = [id, event].join(".")
 
-        SocketHandler.all.each do |handler|
+        Client.all.each do |handler|
           if handler.streams.include?(stream)
             handler.send_payload payload
           end
