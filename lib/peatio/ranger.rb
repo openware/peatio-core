@@ -3,6 +3,8 @@ module Peatio::Ranger
     host = ENV["RANGER_HOST"] || "0.0.0.0"
     port = ENV["RANGER_PORT"] || "8081"
 
+    auth = Peatio::Auth::JWTAuthenticator.new(jwt_public_key)
+
     logger = Peatio::Logger.logger
     logger.info "Starting the server on port #{port}"
 
@@ -35,8 +37,7 @@ module Peatio::Ranger
 
               token = data["jwt"]
 
-              auth = Peatio::Auth::JWTAuthenticator.new(token, jwt_public_key)
-              payload = auth.authenticate!
+              payload = auth.authenticate!(token)
             rescue => error
               Peatio::Logger::error error
               socket.close

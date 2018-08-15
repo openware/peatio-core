@@ -3,6 +3,46 @@ require "jwt"
 require_relative "error"
 
 module Peatio::Auth
+  # JWTAuthenticator used to authenticate user using JWT.
+  #
+  # It allows configuration of JWT verification through following ENV
+  # variables (all optional):
+  # * JWT_ISSUER
+  # * JWT_AUDIENCE
+  # * JWT_ALGORITHM (default: RS256)
+  # * JWT_DEFAULT_LEEWAY
+  # * JWT_ISSUED_AT_LEEWAY
+  # * JWT_EXPIRATION_LEEWAY
+  # * JWT_NOT_BEFORE_LEEWAY
+  #
+  # Refer to jwt/ruby-jwt for more information[https://github.com/jwt/ruby-jwt]
+  #
+  # ===== Example:
+  #   rsa_private = OpenSSL::PKey::RSA.generate(2048)
+  #   rsa_public = rsa_private.public_key
+  #
+  #   payload = {
+  #     iat: Time.now.to_i,
+  #     exp: (Time.now + 60).to_i,
+  #     sub: "session",
+  #     iss: "barong",
+  #     aud: [
+  #       "peatio",
+  #       "barong",
+  #     ],
+  #     jti: "BEF5617B7B2762DDE61702F5",
+  #     uid: "TEST123",
+  #     email: "user@example.com",
+  #     role: "admin",
+  #     level: 4,
+  #     state: "active",
+  #   }
+  #
+  #   token = JWT.encode(payload, rsa_private, "RS256")
+  #
+  #   auth = Peatio::Auth::JWTAuthenticator.new(rsa_public)
+  #   auth.authenticate!("Bearer #{token}")
+
   class JWTAuthenticator
     @@verify_options = {
       verify_expiration: true,
@@ -22,27 +62,38 @@ module Peatio::Auth
       nbf_leeway: ENV["JWT_NOT_BEFORE_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
     }.compact
 
-    def initialize(token, public_key)
-      @token_type, @token_value = token.to_s.split(" ")
+    # Creates new authenticator with given public key.
+    #
+    # ===== Arguments:
+    # public_key:: OpenSSL public key object to verify signature.
+    def initialize(public_key)
       @public_key = public_key
     end
 
     # Decodes and verifies JWT.
-    # Returns authentic member email or raises an exception.
+    # Returns payload from JWT or raises an exception
     #
-    # @param [Hash] options
-    # @return [String, Member, NilClass]
-    def authenticate!(options = {})
-      unless @token_type == "Bearer"
+    # ===== Arguments:
+    # token:: Token string. Must start from <tt>"Bearer "</tt>.
+    #
+    # ===== Returns:
+    # Payload Hash from JWT without any changes.
+    #
+    # ===== Exceptions:
+    # Peatio::Auth::Error:: If token is invalid or can't be verified.
+    def authenticate!(token)
+      token_type, token_value = token.to_s.split(" ")
+
+      unless token_type == "Bearer"
         raise(Peatio::Auth::Error, "Token type is not provided or invalid.")
       end
 
-      decode_and_verify_token(@token_value)
-    rescue => e
-      if Peatio::Auth::Error === e
-        raise e
+      decode_and_verify_token(token_value)
+    rescue => error
+      if Peatio::Auth::Error === error
+        raise(error)
       else
-        raise Peatio::Auth::Error, e.inspect
+        raise(Peatio::Auth::Error, e.inspect)
       end
     end
 
@@ -55,7 +106,7 @@ module Peatio::Auth
 
       payload
     rescue JWT::DecodeError => e
-      raise Peatio::Auth::Error, "Failed to decode and verify JWT: #{e.inspect}."
+      raise(Peatio::Auth::Error, "Failed to decode and verify JWT: #{e.inspect}.")
     end
   end
 end
