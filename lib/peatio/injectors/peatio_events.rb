@@ -19,8 +19,8 @@ module Peatio::Injectors
 
     def inject_message()
       if message = @messages.shift
-        event_name, data = message
-        Peatio::MQ::Events.publish(event_name, data) {
+        type, id, event, data = message
+        Peatio::MQ::Events.publish(type, id, event, data) {
           inject_message()
         }
       else
@@ -30,6 +30,7 @@ module Peatio::Injectors
 
     def create_messages
       [
+        private_trade,
         order_created,
         order_canceled,
         order_completed,
@@ -49,9 +50,22 @@ module Peatio::Injectors
     alias :completed_at :updated_at
     alias :canceled_at :updated_at
 
+    def private_trade
+      [
+        "private",
+        "debug_user",
+        "trade",
+        {
+          trade: "some-data",
+        },
+      ]
+    end
+
     def order_created
       [
-        "#{market}.order_created",
+        "public",
+        market,
+        "order_created",
         {
           market: "#{market}",
           type: "buy",
@@ -77,7 +91,9 @@ module Peatio::Injectors
 
     def order_canceled
       [
-        "#{market}.order_canceled",
+        "public",
+        market,
+        "order_canceled",
         {
           market: "#{market}",
           type: "sell",
@@ -104,7 +120,9 @@ module Peatio::Injectors
 
     def order_completed
       [
-        "#{market}.order_completed", {
+        "public",
+        market,
+        "order_completed", {
           market: "#{market}",
           type: "sell",
           trader_uid: seller_uid,
@@ -132,7 +150,9 @@ module Peatio::Injectors
 
     def order_updated
       [
-        "#{market}.order_updated", {
+        "public",
+        market,
+        "order_updated", {
           market: "#{market}",
           type: "sell",
           trader_uid: seller_uid,
@@ -160,7 +180,9 @@ module Peatio::Injectors
 
     def trade_completed
       [
-        "#{market}.trade_completed", {
+        "public",
+        market,
+        "trade_completed", {
           market: "#{market}",
           price: "0.03",
           buyer_uid: buyer_uid,

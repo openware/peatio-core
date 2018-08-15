@@ -4,14 +4,14 @@ module Peatio::MQ::Events
     ranger.subscribe
   end
 
-  def self.publish(event, payload)
+  def self.publish(type, id, event, payload)
     @@client ||= begin
       ranger = RangerEvents.new
       ranger.connect
       ranger
     end
 
-    @@client.publish(event, payload) do
+    @@client.publish(type, id, event, payload) do
       yield if block_given?
     end
   end
@@ -25,6 +25,14 @@ module Peatio::MQ::Events
       @@all
     end
 
+    def self.user(user)
+      @@all.each do |handler|
+        if handler.user == user
+          yield handler
+        end
+      end
+    end
+
     def initialize(socket, streams)
       @socket = socket
       @streams = streams
@@ -33,6 +41,8 @@ module Peatio::MQ::Events
       @authorized = false
 
       @socket.onmessage { |msg|
+        msg.strip!
+
         @authorized = true
         @user = msg
       }
@@ -56,11 +66,12 @@ module Peatio::MQ::Events
       @exchange = Peatio::MQ::Client.channel.topic(@exchange_name)
     end
 
-    def publish(event, payload)
+    def publish(type, id, event, payload)
+      routing_key = [type, id, event].join(".")
       serialized_data = JSON.dump(payload)
 
-      @exchange.publish(serialized_data, routing_key: event) do
-        Peatio::Logger::debug { "published event to #{event} " }
+      @exchange.publish(serialized_data, routing_key: routing_key) do
+        Peatio::Logger::debug { "published event to #{routing_key} " }
 
         yield if block_given?
       end
@@ -81,13 +92,34 @@ module Peatio::MQ::Events
 
         #Peatio::Logger.debug { "event received: #{payload}" }
 
-        stream = metadata.routing_key
+        # type@id@event
+        # type can be public|private
+        # id can be user id or market
+        # event can be anything like order_completed or just trade
 
-        SocketHandler.all.each do |handler|
-          if !handler.authorized
-            next
+        routing_key = metadata.routing_key
+        if routing_key.count(".") != 2
+          Peatio::Logger::error {
+            "got invalid routing key from amqp: #{routing_key}"
+          }
+          next
+        end
+
+        type, id, event = routing_key.split(".")
+
+        if type == "private"
+          SocketHandler.user(id) do |handler|
+            if handler.streams.include?(event)
+              handler.send_payload payload
+            end
           end
 
+          next
+        end
+
+        stream = [id, event].join(".")
+
+        SocketHandler.all.each do |handler|
           if handler.streams.include?(stream)
             handler.send_payload payload
           end
