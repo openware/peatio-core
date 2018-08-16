@@ -61,12 +61,19 @@ module Peatio::Auth
       nbf_leeway: ENV["JWT_NOT_BEFORE_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
     }.compact
 
+    @@encode_options = {
+      algorithm: @@verify_options[:algorithms].first,
+    }.compact
+
     # Creates new authenticator with given public key.
     #
     # @param public_key [OpenSSL::PKey::PKey] Public key object to verify
     #   signature.
-    def initialize(public_key)
+    # @param private_key [OpenSSL::PKey::PKey] Optional private key that used
+    #   only to encode new tokens.
+    def initialize(public_key, private_key = nil)
       @public_key = public_key
+      @private_key = private_key
     end
 
     # Decodes and verifies JWT.
@@ -91,6 +98,18 @@ module Peatio::Auth
       else
         raise(Peatio::Auth::Error, e.inspect)
       end
+    end
+
+    # Encodes given payload and produces JWT.
+    #
+    # @param payload [String, Hash] Payload to encode.
+    # @return [String] JWT token string.
+    #
+    # @raise [ArgumentError] If no private key was passed to constructor.
+    def encode(payload)
+      raise(::ArgumentError, "No private key given.") if @private_key.nil?
+
+      JWT.encode(payload, @private_key, @@encode_options[:algorithm])
     end
 
     private

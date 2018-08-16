@@ -20,13 +20,13 @@ describe Peatio::Auth::JWTAuthenticator do
       state: "active",
     }
 
-    token = JWT.encode(payload, rsa_private, "RS256")
+    auth = Peatio::Auth::JWTAuthenticator.new(rsa_public, rsa_private)
 
-    auth = Peatio::Auth::JWTAuthenticator.new(rsa_public)
+    token = auth.encode(payload)
     auth.authenticate!("Bearer #{token}")
   end
 
-  it "will raise exception for invalid jwt" do
+  it "will raise exception for invalid jwt (expired)" do
     rsa_private = OpenSSL::PKey::RSA.generate(2048)
     rsa_public = rsa_private.public_key
 
@@ -48,12 +48,22 @@ describe Peatio::Auth::JWTAuthenticator do
       state: "active",
     }
 
-    token = JWT.encode(payload, rsa_private, "RS256")
-
-    auth = Peatio::Auth::JWTAuthenticator.new(rsa_public)
+    auth = Peatio::Auth::JWTAuthenticator.new(rsa_public, rsa_private)
+    token = auth.encode(payload)
 
     expect {
       auth.authenticate!("Bearer #{token}")
     }.to raise_error(Peatio::Auth::Error)
+  end
+
+  it "will raise exception if no private key given for encoding" do
+    rsa_private = OpenSSL::PKey::RSA.generate(2048)
+    rsa_public = rsa_private.public_key
+
+    auth = Peatio::Auth::JWTAuthenticator.new(rsa_public, nil)
+
+    expect {
+      token = auth.encode("xxx")
+    }.to raise_error(ArgumentError)
   end
 end
