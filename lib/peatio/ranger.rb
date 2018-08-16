@@ -9,6 +9,7 @@ module Peatio::Ranger
 
     def send(method, data)
       payload = JSON.dump(method => data)
+      @logger.debug { payload }
       @socket.send payload
     end
 
@@ -56,14 +57,6 @@ module Peatio::Ranger
       )
 
       @socket.instance_variable_set(:@connection_handler, @client)
-    end
-
-    private
-
-    def send(method, data)
-      payload = JSON.dump(method => data)
-      @logger.debug { payload }
-      @socket.send payload
     end
   end
 
