@@ -1,51 +1,69 @@
 module Peatio::Ranger
   class Connection
-    def initialize(auth, socket, logger)
-      @auth = auth
+    def initialize(authenticator, socket, logger)
+      @authenticator = authenticator
       @socket = socket
       @logger = logger
+      @streams = []
+    end
+
+    def send(method, data)
+      payload = JSON.dump(method => data)
+      @socket.send payload
     end
 
     def handle(msg)
+      authorized = false
       begin
         data = JSON.parse(msg)
 
         token = data["jwt"]
 
-        payload = auth.authenticate!
+        payload = @authenticator.authenticate!(token)
+
+        authorized = true
+      rescue JSON::ParserError
       rescue => error
-        @logger.error error
-        @socket.close
+        @logger.error error.message
+      end
+
+      if !authorized
+        send :error, message: "Authentication failed."
+        return
       end
 
       @client.user = payload[:uid]
       @client.authorized = true
 
-      @logger.info "ranger: user #{client.user} authenticated #{streams}"
+      @logger.info "ranger: user #{@client.user} authenticated #{@streams}"
+
+      send :success, message: "Authenticated."
     end
 
     def handshake(handshake)
       query = URI::decode_www_form(handshake.query_string)
 
-      streams = query.map do |item|
+      @streams = query.map do |item|
         if item.first == "stream"
           item.last
         end
       end
 
-      @logger.info "ranger: WebSocket connection openned, streams: #{streams}"
+      @logger.info "ranger: WebSocket connection openned, streams: #{@streams}"
 
       @client = Peatio::MQ::Events::Client.new(
-        @socket, streams,
+        @socket, @streams,
       )
 
       @socket.instance_variable_set(:@connection_handler, @client)
     end
 
-    def onclose
-    end
+    private
 
-    def onerror(e)
+    def send(method, data)
+      payload = JSON.dump(method => data)
+      @logger.debug { payload }
+      @socket.send payload
     end
   end
 
@@ -53,7 +71,7 @@ module Peatio::Ranger
     host = ENV["RANGER_HOST"] || "0.0.0.0"
     port = ENV["RANGER_PORT"] || "8081"
 
-    auth = Peatio::Auth::JWTAuthenticator.new(jwt_public_key)
+    authenticator = Peatio::Auth::JWTAuthenticator.new(jwt_public_key)
 
     logger = Peatio::Logger.logger
     logger.info "Starting the server on port #{port}"
@@ -70,7 +88,7 @@ module Peatio::Ranger
         port: port,
         secure: true,
       ) do |socket|
-        connection = Connection.new(auth, socket, logger)
+        connection = Connection.new(authenticator, socket, logger)
 
         socket.onopen do |handshake|
           connection.handshake(handshake)

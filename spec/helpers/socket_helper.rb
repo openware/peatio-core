@@ -12,6 +12,8 @@ def ws_server(opts = {})
   }
 end
 
-def ws_client(addr)
-  EventMachine::WebSocketClient.connect(addr)
+def ws_connect(query = "")
+  EventMachine::WebSocketClient.connect(
+    "ws://#{ENV.fetch("WEBSOCKET_HOST")}:#{ENV.fetch("WEBSOCKET_PORT")}" + query,
+  )
 end

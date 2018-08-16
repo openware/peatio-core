@@ -100,9 +100,9 @@ module Peatio::MQ::Events
         type, id, event = routing_key.split(".")
 
         if type == "private"
-          Client.user(id) do |handler|
-            if handler.streams.include?(event)
-              handler.send_payload payload
+          Client.user(id) do |client|
+            if client.streams.include?(event)
+              client.send_payload payload
             end
           end
 
