@@ -6,7 +6,7 @@ module Peatio::Ranger
       @logger = logger
     end
 
-    def onmessage(msg)
+    def handle(msg)
       begin
         data = JSON.parse(msg)
 
@@ -24,7 +24,7 @@ module Peatio::Ranger
       @logger.info "ranger: user #{client.user} authenticated #{streams}"
     end
 
-    def onopen(handshake)
+    def handshake(handshake)
       query = URI::decode_www_form(handshake.query_string)
 
       streams = query.map do |item|
@@ -43,11 +43,9 @@ module Peatio::Ranger
     end
 
     def onclose
-      @logger.info "ranger: WebSocket connection closed"
     end
 
     def onerror(e)
-      puts "ranger: WebSocket Error: #{e.message}"
     end
   end
 
@@ -75,19 +73,19 @@ module Peatio::Ranger
         connection = Connection.new(auth, socket, logger)
 
         socket.onopen do |handshake|
-          connection.onopen(handshake)
+          connection.handshake(handshake)
         end
 
         socket.onmessage do |msg|
-          connection.onmessage(msg)
+          connection.handle(msg)
         end
 
         socket.onclose do
-          connection.onclose
+          logger.info "ranger: WebSocket connection closed"
         end
 
         socket.onerror do |e|
-          connection.onerror(e)
+          logger.error "ranger: WebSocket Error: #{e.message}"
         end
       end
 
