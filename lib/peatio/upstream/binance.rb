@@ -16,6 +16,7 @@ require "pp"
 module Peatio::Upstream::Binance
   require_relative "binance/orderbook"
   require_relative "binance/client"
+  require_relative "binance/trader"
 
   def self.logger
     logger = Peatio::Logger.logger
@@ -30,20 +31,29 @@ module Peatio::Upstream::Binance
       orderbooks[symbol] = Orderbook.new
     end
 
-    streams = markets.product(["depth", "trade"]).map { |e| e.join("@") }.join("/")
+    streams = markets.product(["depth"])
+      .map { |e| e.join("@") }.join("/")
 
     client = Client.new
-    client.stream_connect! streams
+    trader = Trader.new(client)
 
-    client.stream.on :open do |event|
-      logger.info "streams connected: " + streams
+    client.connect_public_streams!(streams)
 
+    client.public_stream.on :open do |event|
+      logger.info "public streams connected: " + streams
+
+      total = markets.length
       markets.each do |symbol|
-        load_orderbook(client, symbol, orderbooks[symbol])
+        load_orderbook(client, symbol, orderbooks[symbol]) {
+          total -= 1
+          if total == 0
+            yield if block_given?
+          end
+        }
       end
     end
 
-    client.stream.on :message do |message|
+    client.public_stream.on :message do |message|
       payload = JSON.parse(message.data)
 
       data = payload["data"]
@@ -53,26 +63,18 @@ module Peatio::Upstream::Binance
       when "depth"
         process_depth_diff(data, symbol, orderbooks)
       when "trade"
-        process_trades(data, symbol)
+        process_trades(data, symbol, trader)
       end
     end
 
-    client.stream.on :error do |message|
+    client.public_stream.on :error do |message|
       logger.error(message)
     end
 
-    return orderbooks
+    return orderbooks, trader
   end
 
   private
-
-  def self.process_trades(data, symbol)
-    id, price, amount = data["t"], data["p"], data["q"]
-    buyer, seller = data["b"], data["a"]
-    logger.debug "[#{symbol}] ##{id} trade event: " \
-                 "amount=#{amount} price=#{price} " \
-                 "seller=#{seller} buyer=#{buyer}"
-  end
 
   def self.process_depth_diff(data, symbol, orderbooks)
     orderbook = orderbooks[symbol]
@@ -131,6 +133,8 @@ module Peatio::Upstream::Binance
           orderbook.ask(price, volume, generation)
         end
       }
+
+      yield if block_given?
     }
   end
 

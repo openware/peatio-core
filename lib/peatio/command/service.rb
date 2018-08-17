@@ -35,11 +35,41 @@ module Peatio::Command::Service
 
       def execute
         EM.run {
-          orderbooks = ::Peatio::Upstream::Binance.run!(
+          orderbooks, trader = ::Peatio::Upstream::Binance.run!(
             markets: market_list,
           )
 
           logger = Peatio::Upstream::Binance.logger
+
+          order = trader.order(
+            timeout: 10,
+            symbol: "TUSDBTC",
+            type: "LIMIT",
+            side: "BUY",
+            quantity: 10.0,
+            price: 0.000145,
+          )
+
+          order.on :error do |request|
+            puts request.response
+            puts request.response_header.status
+          end
+
+          order.on :submit do |id|
+            logger.info "XXX order submitted: #{id}"
+          end
+
+          order.on :partially_filled do |quantity, price|
+            logger.info "XXX order partially filled: #{quantity} #{price}"
+          end
+
+          order.on :filled do |quantity, price|
+            logger.info "XXX order filled: #{quantity} #{price}"
+          end
+
+          order.on :cancelled do
+            logger.info "XXX order cancelled: #{order.quantity} left"
+          end
 
           EM::PeriodicTimer.new(dump_interval) do
             orderbooks.each do |symbol, orderbook|
