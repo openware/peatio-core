@@ -4,3 +4,6 @@ cache: bundler
 rvm:
   - 2.5.1
 before_install: gem install bundler -v 1.16.3
+env:
+  - WEBSOCKET_HOST: localhost
+    WEBSOCKET_PORT: 8081
