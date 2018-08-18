@@ -6,6 +6,7 @@ require "eventmachine"
 require "em-websocket"
 
 module Peatio
+  require_relative "peatio/config"
   require_relative "peatio/error"
   require_relative "peatio/logger"
   require_relative "peatio/version"
