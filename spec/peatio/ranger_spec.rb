@@ -3,6 +3,8 @@ require "bunny-mock"
 
 describe Peatio::Ranger do
   let(:logger) { Peatio::Logger }
+  let(:ws_host) { 'localhost' }
+  let(:ws_port) { 3434 }
 
   let(:ws_client) {
     ws_connect

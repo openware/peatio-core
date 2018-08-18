@@ -6,3 +6,6 @@ AllCops:
   DisabledByDefault: true
   Exclude:
     - spec/**/*
+
+# Style/StringLiterals:
+#   EnforcedStyle: single_quotes
