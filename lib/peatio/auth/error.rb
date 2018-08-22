@@ -11,7 +11,7 @@ module Peatio::Auth
 
       super(
         code: 2001,
-        text: "Authorization failed: #{reason}",
+        text: "Authorization failed".tap { |t| t << ": #{reason}" if reason },
       )
     end
   end
