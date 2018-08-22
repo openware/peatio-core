@@ -96,7 +96,7 @@ module Peatio::Auth
       when Peatio::Auth::Error
         raise(error)
       else
-        raise(Peatio::Auth::Error, e.message)
+        raise(Peatio::Auth::Error, error.message)
       end
     end
 
