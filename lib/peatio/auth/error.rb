@@ -12,7 +12,6 @@ module Peatio::Auth
       super(
         code: 2001,
         text: "Authorization failed: #{reason}",
-        status: 401,
       )
     end
   end

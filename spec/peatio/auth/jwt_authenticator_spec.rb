@@ -66,4 +66,15 @@ describe Peatio::Auth::JWTAuthenticator do
       token = auth.encode("xxx")
     }.to raise_error(ArgumentError)
   end
+
+  it "will raise exception for invalid jwt (garbage)" do
+    rsa_private = OpenSSL::PKey::RSA.generate(2048)
+    rsa_public = rsa_private.public_key
+
+    auth = Peatio::Auth::JWTAuthenticator.new(rsa_public, nil)
+
+    expect {
+      auth.authenticate!("Bearer garbage")
+    }.to raise_error(/Authorization failed: Failed to decode and verify JWT/)
+  end
 end
