@@ -197,30 +197,30 @@ describe Peatio::Ranger do
               expect(msg.data).to eq msg_auth_success
 
               Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_1", {
-                data: "stream_1_user_1",
+                key: "stream_1_user_1",
               })
 
               Peatio::MQ::Events.publish("private", "SOMEUSER2", "stream_1", {
-                data: "stream_1_user_2",
+                key: "stream_1_user_2",
               })
 
               Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
-                data: "stream_2_user_1",
+                key: "stream_2_user_1",
               })
 
               Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_3", {
-                data: "stream_3_user_1",
+                key: "stream_3_user_1",
               })
 
               Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
-                data: "stream_2_user_1_message_2",
+                key: "stream_2_user_1_message_2",
               })
             when 2
-              expect(msg.data).to eq '{"data":"stream_1_user_1"}'
+              expect(msg.data).to eq '["stream_1",{"key":"stream_1_user_1"}]'
             when 3
-              expect(msg.data).to eq '{"data":"stream_2_user_1"}'
+              expect(msg.data).to eq '["stream_2",{"key":"stream_2_user_1"}]'
             when 4
-              expect(msg.data).to eq '{"data":"stream_2_user_1_message_2"}'
+              expect(msg.data).to eq '["stream_2",{"key":"stream_2_user_1_message_2"}]'
               done
             end
           }
@@ -249,19 +249,19 @@ describe Peatio::Ranger do
 
           ws_client.callback {
             Peatio::MQ::Events.publish("public", "btcusd", "order", {
-              data: "btcusd_order_1",
+              key: "btcusd_order_1",
             })
             Peatio::MQ::Events.publish("public", "btcusd", "order", {
-              data: "btcusd_order_2",
+              key: "btcusd_order_2",
             })
             Peatio::MQ::Events.publish("public", "btcusd", "trade", {
-              data: "btcusd_trade_2",
+              key: "btcusd_trade_2",
             })
             Peatio::MQ::Events.publish("public", "ethusd", "order", {
-              data: "ethusd_order_1",
+              key: "ethusd_order_1",
             })
             Peatio::MQ::Events.publish("public", "btcusd", "order", {
-              data: "btcusd_order_3",
+              key: "btcusd_order_3",
             })
           }
 
@@ -271,11 +271,11 @@ describe Peatio::Ranger do
 
             case step
             when 1
-              expect(msg.data).to eq '{"data":"btcusd_order_1"}'
+              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_1"}]'
             when 2
-              expect(msg.data).to eq '{"data":"btcusd_order_2"}'
+              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_2"}]'
             when 3
-              expect(msg.data).to eq '{"data":"btcusd_order_3"}'
+              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_3"}]'
               done
             end
           }

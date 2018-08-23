@@ -46,7 +46,7 @@ module Peatio::MQ::Events
     end
 
     def send_payload(message)
-      @socket.send message
+      @socket.send message.to_json
     end
   end
 
@@ -58,9 +58,11 @@ module Peatio::MQ::Events
     end
 
     def connect!
-      Peatio::MQ::Client.new
-      Peatio::MQ::Client.connect!
-      Peatio::MQ::Client.create_channel!
+      if Peatio::MQ::Client.channel.nil?
+        Peatio::MQ::Client.new
+        Peatio::MQ::Client.connect!
+        Peatio::MQ::Client.create_channel!
+      end
       @exchange = Peatio::MQ::Client.channel.topic(@exchange_name)
     end
 
@@ -101,11 +103,12 @@ module Peatio::MQ::Events
         end
 
         type, id, event = routing_key.split(".")
+        payload_decoded = JSON.parse payload
 
         if type == "private"
           Client.user(id) do |client|
             if client.streams.include?(event)
-              client.send_payload payload
+              client.send_payload [event, payload_decoded]
             end
           end
 
@@ -115,8 +118,8 @@ module Peatio::MQ::Events
         stream = [id, event].join(".")
 
         Client.all.each do |handler|
-          if handler.streams.include?(stream)
-            handler.send_payload payload
+          if handler.streams.include?(id) or handler.streams.include?(stream)
+            handler.send_payload [stream, payload_decoded]
           end
         end
       end
