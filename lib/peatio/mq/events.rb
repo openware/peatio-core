@@ -58,6 +58,9 @@ module Peatio::MQ::Events
     end
 
     def connect!
+      Peatio::MQ::Client.new
+      Peatio::MQ::Client.connect!
+      Peatio::MQ::Client.create_channel!
       @exchange = Peatio::MQ::Client.channel.topic(@exchange_name)
     end
 
