@@ -79,7 +79,7 @@ module Peatio::Ranger
       EM::WebSocket.start(
         host: host,
         port: port,
-        secure: true,
+        secure: false,
       ) do |socket|
         connection = Connection.new(authenticator, socket, logger)
 
