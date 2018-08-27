@@ -6,7 +6,7 @@ module Peatio
       end
 
       def level
-        (ENV["LOG_LEVEL"] || "debug").downcase.to_sym
+        Peatio::Config.fetch("LOG_LEVEL", "debug").downcase.to_sym
       end
 
       def debug(progname = nil, &block)

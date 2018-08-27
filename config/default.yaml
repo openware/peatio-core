@@ -1,0 +1,4 @@
+log_level: debug
+
+ranger_host: "127.0.0.1"
+ranger_port: 8383

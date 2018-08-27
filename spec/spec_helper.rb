@@ -1,3 +1,5 @@
+ENV["PEATIO_ENV"] = "test"
+
 require "bundler/setup"
 require "peatio"
 

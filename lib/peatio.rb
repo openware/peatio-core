@@ -8,6 +8,7 @@ require "em-websocket"
 module Peatio
   require_relative "peatio/error"
   require_relative "peatio/logger"
+  require_relative "peatio/config"
   require_relative "peatio/version"
   require_relative "peatio/sql/client"
   require_relative "peatio/sql/schema"
@@ -17,3 +18,5 @@ module Peatio
   require_relative "peatio/injectors/peatio_events"
   require_relative "peatio/auth/jwt_authenticator"
 end
+
+Peatio::Config.load(ENV.fetch("PEATIO_ENV", "development"))
