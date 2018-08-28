@@ -43,28 +43,6 @@ module Peatio::Auth
   #   auth = Peatio::Auth::JWTAuthenticator.new(rsa_public)
   #   auth.authenticate!("Bearer #{token}")
   class JWTAuthenticator
-    @@verify_options = {
-      verify_expiration: true,
-      verify_not_before: true,
-      iss: ENV["JWT_ISSUER"],
-      verify_iss: !ENV["JWT_ISSUER"].nil?,
-      verify_iat: true,
-      verify_jti: true,
-      aud: ENV["JWT_AUDIENCE"].to_s.split(",").reject(&:empty?),
-      verify_aud: !ENV["JWT_AUDIENCE"].nil?,
-      sub: "session",
-      verify_sub: true,
-      algorithms: [ENV["JWT_ALGORITHM"] || "RS256"],
-      leeway: ENV["JWT_DEFAULT_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
-      iat_leeway: ENV["JWT_ISSUED_AT_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
-      exp_leeway: ENV["JWT_EXPIRATION_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
-      nbf_leeway: ENV["JWT_NOT_BEFORE_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
-    }.compact
-
-    @@encode_options = {
-      algorithm: @@verify_options[:algorithms].first,
-    }.compact
-
     # Creates new authenticator with given public key.
     #
     # @param public_key [OpenSSL::PKey::PKey] Public key object to verify
@@ -74,6 +52,28 @@ module Peatio::Auth
     def initialize(public_key, private_key = nil)
       @public_key = public_key
       @private_key = private_key
+
+      @verify_options = {
+        verify_expiration: true,
+        verify_not_before: true,
+        iss: ENV["JWT_ISSUER"],
+        verify_iss: !ENV["JWT_ISSUER"].nil?,
+        verify_iat: true,
+        verify_jti: true,
+        aud: ENV["JWT_AUDIENCE"].to_s.split(",").reject(&:empty?),
+        verify_aud: !ENV["JWT_AUDIENCE"].nil?,
+        sub: "session",
+        verify_sub: true,
+        algorithms: [ENV["JWT_ALGORITHM"] || "RS256"],
+        leeway: ENV["JWT_DEFAULT_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
+        iat_leeway: ENV["JWT_ISSUED_AT_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
+        exp_leeway: ENV["JWT_EXPIRATION_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
+        nbf_leeway: ENV["JWT_NOT_BEFORE_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
+      }.compact
+
+      @encode_options = {
+        algorithm: @verify_options[:algorithms].first,
+      }.compact
     end
 
     # Decodes and verifies JWT.
@@ -109,13 +109,13 @@ module Peatio::Auth
     def encode(payload)
       raise(::ArgumentError, "No private key given.") if @private_key.nil?
 
-      JWT.encode(payload, @private_key, @@encode_options[:algorithm])
+      JWT.encode(payload, @private_key, @encode_options[:algorithm])
     end
 
     private
 
     def decode_and_verify_token(token)
-      payload, header = JWT.decode(token, @public_key, true, @@verify_options)
+      payload, header = JWT.decode(token, @public_key, true, @verify_options)
 
       payload.keys.each { |k| payload[k.to_sym] = payload.delete(k) }
 
