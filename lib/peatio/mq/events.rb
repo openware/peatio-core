@@ -54,7 +54,7 @@ module Peatio::MQ::Events
     attr_accessor :exchange_name
 
     def initialize
-      @exchange_name = "peatio.events.market"
+      @exchange_name = "peatio.events.ranger"
     end
 
     def connect!
