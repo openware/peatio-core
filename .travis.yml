@@ -7,3 +7,8 @@ before_install: gem install bundler -v 1.16.3
 env:
   - WEBSOCKET_HOST: localhost
     WEBSOCKET_PORT: 8081
+jobs:
+  include:
+    if: branch = master
+      - gem install bump
+      - ./deploy_gem.sh
