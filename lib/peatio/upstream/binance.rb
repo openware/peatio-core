@@ -34,17 +34,17 @@ module Peatio::Upstream::Binance
     streams = markets.product(["depth"])
       .map { |e| e.join("@") }.join("/")
 
-    client = Client.new
-    trader = Trader.new(client)
+    @@client = Client.new
+    trader = Trader.new(@@client)
 
-    client.connect_public_streams!(streams)
+    @@client.connect_public_streams!(streams)
 
-    client.public_stream.on :open do |event|
+    @@client.public_stream.on :open do |event|
       logger.info "public streams connected: " + streams
 
       total = markets.length
       markets.each do |symbol|
-        load_orderbook(client, symbol, orderbooks[symbol]) {
+        load_orderbook(symbol, orderbooks[symbol]) {
           total -= 1
           if total == 0
             yield if block_given?
@@ -53,7 +53,7 @@ module Peatio::Upstream::Binance
       end
     end
 
-    client.public_stream.on :message do |message|
+    @@client.public_stream.on :message do |message|
       payload = JSON.parse(message.data)
 
       data = payload["data"]
@@ -67,11 +67,15 @@ module Peatio::Upstream::Binance
       end
     end
 
-    client.public_stream.on :error do |message|
+    @@client.public_stream.on :error do |message|
       logger.error(message)
     end
 
     return orderbooks, trader
+  end
+
+  def self.stop!
+    @@client.public_stream.close
   end
 
   private
@@ -96,8 +100,8 @@ module Peatio::Upstream::Binance
       ]
   end
 
-  def self.load_orderbook(client, symbol, orderbook)
-    request = client.depth_snapshot(symbol)
+  def self.load_orderbook(symbol, orderbook)
+    request = @@client.depth_snapshot(symbol)
 
     request.errback {
       logger.fatal "unable to request market depth for %s" % symbol
