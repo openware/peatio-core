@@ -10,21 +10,66 @@ require "pp"
 # Module provides access to trading on Binance upstream with following
 # features:
 #
-# * Client for creating, cancelling orders;
-# * Orderbook which is remote copy of Binance orderbook;
-# * Trade monitoring;
-module Peatio::Upstream::Binance
+# * Remote orderbooks objects that syncs in background and provides information
+#   about current orderbook depth.
+# * Trader that allows to execute given order with timeout and monitor its
+#   state.
+#
+# All API provided by module is async.
+class Peatio::Upstream::Binance
+  include Peatio::Bus
+
   require_relative "binance/orderbook"
   require_relative "binance/client"
   require_relative "binance/trader"
 
-  def self.logger
-    logger = Peatio::Logger.logger
-    logger.progname = "binance"
-    return logger
+  # @return [Client]
+  attr_accessor :client
+
+  # @return [Trader]
+  attr_accessor :trader
+
+  # Creates new upstream and initializes Binance API client.
+  # Require configuration to work.
+  #
+  # Trader can be used immediately after object creation and can be accessed
+  # as +binance.trader+.
+  #
+  # @see Client
+  # @see Trader
+  def initialize
+    @client = Client.new
+    @trader = Trader.new(@client)
   end
 
-  def self.run!(markets:)
+  # Connects to Binance and start to stream orderbook data.
+  #
+  # Method is non-blocking and orderbook data is available only after stream
+  # is successfully connected.
+  #
+  # To subscribe on open event use +on(:open)+ callback to register block
+  # that will receive +orderbooks+ object.
+  #
+  # Method should be invoked inside +EM.run{}+ loop
+  #
+  # @example
+  #   EM.run {
+  #     upstream = Peatio::Upstream::Binance.new
+  #     binance.start(["tusdbtc"])
+  #     binance.on(:open) { |orderbooks|
+  #       tusdbtc = orderbooks["tusdbtc"]
+  #       # ...
+  #     }
+  #
+  #     binance.on(:error) { |message|
+  #       puts(message)
+  #     }
+  #   }
+  #
+  # @param markets [Array<String>] List of markets to listen.
+  # @see on
+  # @return [self]
+  def start!(markets)
     orderbooks = {}
 
     markets.each do |symbol|
@@ -34,12 +79,9 @@ module Peatio::Upstream::Binance
     streams = markets.product(["depth"])
       .map { |e| e.join("@") }.join("/")
 
-    @@client = Client.new
-    trader = Trader.new(@@client)
+    @stream = @client.connect_public_stream!(streams)
 
-    @@client.connect_public_streams!(streams)
-
-    @@client.public_stream.on :open do |event|
+    @stream.on :open do |event|
       logger.info "public streams connected: " + streams
 
       total = markets.length
@@ -47,13 +89,13 @@ module Peatio::Upstream::Binance
         load_orderbook(symbol, orderbooks[symbol]) {
           total -= 1
           if total == 0
-            yield if block_given?
+            emit(:open, orderbooks)
           end
         }
       end
     end
 
-    @@client.public_stream.on :message do |message|
+    @stream.on :message do |message|
       payload = JSON.parse(message.data)
 
       data = payload["data"]
@@ -62,25 +104,39 @@ module Peatio::Upstream::Binance
       case stream
       when "depth"
         process_depth_diff(data, symbol, orderbooks)
-      when "trade"
-        process_trades(data, symbol, trader)
       end
     end
 
-    @@client.public_stream.on :error do |message|
+    @stream.on :error do |message|
       logger.error(message)
+      emit(:error, message)
     end
 
-    return orderbooks, trader
+    self
   end
 
-  def self.stop!
-    @@client.public_stream.close
+  # Stop listening streams.
+  #
+  # After calling this method orderbooks will no longer be updated.
+  def stop
+    @stream.close
+  end
+
+  protected
+
+  def self.logger
+    logger = Peatio::Logger.logger
+    logger.progname = "binance"
+    return logger
+  end
+
+  def logger
+    self.class.logger
   end
 
   private
 
-  def self.process_depth_diff(data, symbol, orderbooks)
+  def process_depth_diff(data, symbol, orderbooks)
     orderbook = orderbooks[symbol]
     generation = data["u"]
 
@@ -100,13 +156,13 @@ module Peatio::Upstream::Binance
       ]
   end
 
-  def self.load_orderbook(symbol, orderbook)
-    request = @@client.depth_snapshot(symbol)
+  def load_orderbook(symbol, orderbook)
+    request = @client.depth_snapshot(symbol)
 
     request.errback {
       logger.fatal "unable to request market depth for %s" % symbol
 
-      raise
+      emit(:error)
     }
 
     request.callback {
@@ -116,7 +172,9 @@ module Peatio::Upstream::Binance
           "#{request.response_header.status} #{request.response}"
         )
 
-        raise
+        emit(:error)
+
+        next
       end
 
       payload = JSON.parse(request.response)
@@ -142,7 +200,7 @@ module Peatio::Upstream::Binance
     }
   end
 
-  def self.update_orderbook(orderbook, asks, bids, generation)
+  def update_orderbook(orderbook, asks, bids, generation)
     asks_diff = 0
     asks.each do |(price, volume)|
       asks_diff += orderbook.ask(price, volume, generation)

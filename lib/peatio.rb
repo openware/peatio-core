@@ -11,7 +11,7 @@ module Peatio
   require_relative "peatio/version"
   require_relative "peatio/error"
   require_relative "peatio/logger"
-  require_relative "peatio/wire"
+  require_relative "peatio/bus"
   require_relative "peatio/sql/client"
   require_relative "peatio/sql/schema"
   require_relative "peatio/mq/client"
