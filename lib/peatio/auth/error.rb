@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Auth
   # Error repesent all errors that can be returned from Auth module.
   class Error < Peatio::Error

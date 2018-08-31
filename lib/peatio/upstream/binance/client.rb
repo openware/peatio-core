@@ -38,7 +38,7 @@ class Peatio::Upstream::Binance::Client
 
   # @yield [Faye::Websocket::Client] Yields block when listen key obtained and
   #   websocket stream connected.
-  def connect_private_stream!()
+  def connect_private_stream!
     request = EM::HttpRequest.new(@config[:uri_rest] + "/api/v1/userDataStream").
       post(head: header)
 
@@ -125,7 +125,7 @@ class Peatio::Upstream::Binance::Client
     URI::encode_www_form(query)
   end
 
-  def header()
+  def header
     {'X-MBX-APIKEY': @config[:api_key]}
   end
 end

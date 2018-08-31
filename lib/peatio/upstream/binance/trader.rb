@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Class provides API for non-blocking submitting order for execution with
 # timeout.
 class Peatio::Upstream::Binance::Trader

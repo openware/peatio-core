@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio
   # Module Bus provides mixin for inclusion into other classes to provide
   # event-based callbacks.

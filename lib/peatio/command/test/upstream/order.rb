@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Command::Test::Upstream
   # Class provides command for testing order execution in Binance from CLI.
   #

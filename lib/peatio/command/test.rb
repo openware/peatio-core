@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Module provides commands that can be used to run various test tools from CLI:
 #
 # @example
