@@ -30,7 +30,7 @@ module Peatio::MQ::Events
     def self.user(user)
       @@all.each do |handler|
         if handler.user == user
-          yield handler
+          yield handler if block_given?
         end
       end
     end
