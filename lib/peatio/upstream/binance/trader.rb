@@ -25,6 +25,9 @@ class Peatio::Upstream::Binance::Trader
   class Order
     include Peatio::Bus
 
+    # Upstream order id
+    attr_accessor :id
+
     # Market order was placed on.
     attr_accessor :symbol
 
@@ -46,7 +49,8 @@ class Peatio::Upstream::Binance::Trader
     attr_accessor :timer
 
     # @!visibility protected
-    def initialize(symbol, type, side, quantity, price)
+    def initialize(symbol:, id: nil, type: "", side: "", quantity: 0, price: 0)
+      @id = id
       @symbol = symbol
       @type = type
       @side = side
@@ -113,7 +117,7 @@ class Peatio::Upstream::Binance::Trader
   #
   # @return [Order] Order object with {Bus} interface.
   def order(timeout:, symbol:, type:, side:, quantity:, price:)
-    order = Order.new(symbol, type, side, quantity, price)
+    order = Order.new(symbol: symbol, type: type, side: side, quantity: quantity, price: price)
 
     @client.connect_private_stream! { |stream|
       stream.on :error do |message|
@@ -138,6 +142,24 @@ class Peatio::Upstream::Binance::Trader
     order
   end
 
+  # Method cancels upstream order
+
+  # @param remote_order_id [Integer] Order id on upstream
+  def cancel_order(symbol:, id:)
+    order = @open_orders[id]
+    order = Order.new(symbol: symbol, id: id) if order.nil?
+
+    @client.connect_private_stream! { |stream|
+      stream.on :error do |message|
+        logger.error "error while listening for private stream: #{message}"
+      end
+
+      stream.on :open do |event|
+        cancel_order(order, stream)
+      end
+    }
+  end
+
   protected
 
   def initialize(client)
@@ -150,6 +172,27 @@ class Peatio::Upstream::Binance::Trader
 
   def logger
     Peatio::Upstream::Binance.logger
+  end
+
+  def cancel_order(order, stream)
+    logger.info "[#{order.symbol.downcase}] cancelling order #{order.id}"
+
+    request = @client.cancel_order(
+      symbol: order.symbol,
+      id: order.id
+    )
+
+    request.errback {
+      order.emit(:error, request)
+    }
+
+    request.callback {
+      if request.response_header.status >= 300
+        order.emit(:error, request)
+      else
+        order.emit(:canceled)
+      end
+    }
   end
 
   def submit_order(timeout, order, stream)
