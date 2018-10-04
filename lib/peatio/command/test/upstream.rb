@@ -10,10 +10,12 @@
 module Peatio::Command::Test::Upstream
   require_relative "upstream/orderbook"
   require_relative "upstream/order"
+  require_relative "upstream/cancel_order"
 
   # @!visibility protected
   class Root < Peatio::Command::Base
     subcommand "orderbook", "Start remote orderbook listener", Orderbook
     subcommand "order", "Place real order into remote upstream", Order
+    subcommand "cancel_order", "Cancel real order", CancelOrder
   end
 end

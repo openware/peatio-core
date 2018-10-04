@@ -76,7 +76,7 @@ class Peatio::Upstream::Binance::Trader
   #   EM.run {
   #     binance = Peatio::Upstream::Binance.new
   #
-  #     order = binance.trader.order(
+  #     order = binance.trader.submit_order(
   #       timeout: 5,
   #       symbol: "TUSDBTC",
   #       type: "LIMIT",
@@ -116,7 +116,7 @@ class Peatio::Upstream::Binance::Trader
   # @param price [Float] Price for given order. Ignored for +MARKET+ orders.
   #
   # @return [Order] Order object with {Bus} interface.
-  def order(timeout:, symbol:, type:, side:, quantity:, price:)
+  def submit_order(timeout:, symbol:, type:, side:, quantity:, price:)
     order = Order.new(symbol: symbol, type: type, side: side, quantity: quantity, price: price)
 
     @client.connect_private_stream! { |stream|
@@ -125,7 +125,7 @@ class Peatio::Upstream::Binance::Trader
       end
 
       stream.on :open do |event|
-        submit_order(timeout, order, stream)
+        do_submit(timeout, order, stream)
       end
 
       stream.on :message do |message|
@@ -142,10 +142,35 @@ class Peatio::Upstream::Binance::Trader
     order
   end
 
-  # Method cancels upstream order
-
-  # @param remote_order_id [Integer] Order id on upstream
-  def cancel_order(symbol:, id:)
+  # Method cancels order submitted on the upstream
+  #
+  # Method should be invoked inside +EM.run{}+ loop
+  #
+  # @example
+  #   EM.run {
+  #     binance = Peatio::Upstream::Binance.new
+  #
+  #     order = binance.trader.cance_order(
+  #       id: 123,
+  #       symbol: "TUSDBTC"
+  #     )
+  #
+  #     order.on :error do |request|
+  #       puts("order error: #{request.response}")
+  #       EM.stop
+  #     end
+  #
+  #     order.on :canceled do
+  #       puts("order canceled")
+  #       EM.stop
+  #     end
+  #   }
+  #
+  # @param id [Integer] Order upstream id
+  # @param symbol [String] Symbol to trade one.
+  #
+  # @return [Order] Order object with {Bus} interface.
+  def cancel_order(id:, symbol:)
     order = @open_orders[id]
     order = Order.new(symbol: symbol, id: id) if order.nil?
 
@@ -155,9 +180,10 @@ class Peatio::Upstream::Binance::Trader
       end
 
       stream.on :open do |event|
-        cancel_order(order, stream)
+        do_cancel(order, stream)
       end
     }
+    order
   end
 
   protected
@@ -174,7 +200,7 @@ class Peatio::Upstream::Binance::Trader
     Peatio::Upstream::Binance.logger
   end
 
-  def cancel_order(order, stream)
+  def do_cancel(order, stream)
     logger.info "[#{order.symbol.downcase}] cancelling order #{order.id}"
 
     request = @client.cancel_order(
@@ -195,7 +221,7 @@ class Peatio::Upstream::Binance::Trader
     }
   end
 
-  def submit_order(timeout, order, stream)
+  def do_submit(timeout, order, stream)
     logger.info "[#{order.symbol.downcase}] submitting new order: " \
                 "#{order.type} #{order.side} " \
                 "amount=#{order.quantity} price=#{order.price || "<empty>"}"
