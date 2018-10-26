@@ -4,6 +4,7 @@ require "mysql2"
 require "bunny"
 require "eventmachine"
 require "em-websocket"
+require "memoist"
 
 module Peatio
   require_relative "peatio/error"

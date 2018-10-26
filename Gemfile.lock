@@ -8,6 +8,7 @@ PATH
       em-websocket
       eventmachine
       jwt
+      memoist (~> 0.16.0)
       mysql2
 
 GEM
@@ -39,6 +40,7 @@ GEM
     jaro_winkler (1.5.1)
     json (2.1.0)
     jwt (2.1.0)
+    memoist (0.16.0)
     mysql2 (0.5.2)
     parallel (1.12.1)
     parser (2.5.1.2)
