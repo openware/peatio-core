@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "bump"
   spec.add_development_dependency "em-spec"
   spec.add_development_dependency "em-websocket-client"
   spec.add_development_dependency "bunny-mock"

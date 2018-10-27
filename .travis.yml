@@ -2,8 +2,17 @@ sudo: false
 language: ruby
 cache: bundler
 rvm:
-  - 2.5.1
-before_install: gem install bundler -v 1.16.3
+- 2.5.1
+- 2.5.3
+before_install: gem install bundler -v 1.17.1
 env:
-  - WEBSOCKET_HOST: localhost
-    WEBSOCKET_PORT: 8081
+- WEBSOCKET_HOST: localhost
+  WEBSOCKET_PORT: 8081
+deploy:
+  provider: rubygems
+  api_key:
+    secure: MTlSs+/1/+djQBx9UpZBoPdkLb9j9tx31CxoJ2uw3a429cj9qhJc+qZL9Gbim4kqdDhWAlfIFKDn2aeVPHIcd3VAP3dBUkG2gMxC440gx7rBJXSGpo+zwS9pnsFNQb9RnFZ4OI0dDr0VvYyctZh2h4VVTKhP2m7U59A6yNeNhW8K5HzUZ3+QvykiEQVQUrT29BRpf+9vEISVDPk3o0S0HO+RRvWXOBe5F2M/5hhJUdxUZ2/Pikg3PFJGhS1+g23YhLiEvMN6TiHz/PbUdLN1hnAVgmE86t/DU2lRzhDHNX3CetEhEhtElkTlbpIitmfy8309G0lUMZkN4Z6qKjuYKjuGYXYjXS6nEq6oy5U0HK2Ljo6ka4WZC5u08t5+I12jzCJ5Nq3kdqJkYZwMODgzvcyw4EKNHejyYLGGIbrXgbuYtR6wwvIYz7hz/j/fFxFDawBYC9s92/gvthtHNTzosBi/I07DYYhdF7Rt4TMfdPpasctV8ijTQ+ePH76cNPaDBqupemZUMSJRuuPOXS8SXS1xLDrPviffok/a3zmHDHgYWjqqBzktjCZ5C2PIeVo3o+ClSiWu8tJ3UquqdQ2ug60LK6ttbKxvDk/De3JcV4SEpqJBroSWD84hp0IiyQMEAhl/SxCVLXn9m5xF3evqH168p/Tgr5pklFUDw/tpSh8=
+  gem: peatio
+  on:
+    tags: true
+    repo: rubykube/peatio-core

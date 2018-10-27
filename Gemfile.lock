@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    peatio (0.4.2)
+    peatio (0.4.3)
       amqp
       bunny
       clamp
@@ -18,6 +18,7 @@ GEM
       amq-protocol (>= 2.2.0)
       eventmachine
     ast (2.4.0)
+    bump (0.6.1)
     bunny (2.11.0)
       amq-protocol (~> 2.3.0)
     bunny-mock (1.7.0)
@@ -86,6 +87,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bump
   bundler (~> 1.16)
   bunny-mock
   em-spec
@@ -99,4 +101,4 @@ DEPENDENCIES
   simplecov-json
 
 BUNDLED WITH
-   1.16.4
+   1.17.1
