@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    peatio (0.4.3)
+    peatio (0.4.4)
       amqp
       bunny
       clamp
@@ -19,8 +19,8 @@ GEM
       eventmachine
     ast (2.4.0)
     bump (0.6.1)
-    bunny (2.11.0)
-      amq-protocol (~> 2.3.0)
+    bunny (2.12.0)
+      amq-protocol (~> 2.3, >= 2.3.0)
     bunny-mock (1.7.0)
       bunny (>= 1.7)
     clamp (1.3.0)
@@ -52,7 +52,7 @@ GEM
       rspec-mocks (~> 3.8.0)
     rspec-core (3.8.0)
       rspec-support (~> 3.8.0)
-    rspec-expectations (3.8.1)
+    rspec-expectations (3.8.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
     rspec-mocks (3.8.0)
@@ -61,16 +61,16 @@ GEM
     rspec-support (3.8.0)
     rspec_junit_formatter (0.4.1)
       rspec-core (>= 2, < 4, != 2.12.0)
-    rubocop (0.58.2)
+    rubocop (0.60.0)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
       parser (>= 2.5, != 2.5.1.1)
       powerpack (~> 0.1)
       rainbow (>= 2.2.2, < 4.0)
       ruby-progressbar (~> 1.7)
-      unicode-display_width (~> 1.0, >= 1.0.1)
-    rubocop-github (0.10.0)
-      rubocop (~> 0.51)
+      unicode-display_width (~> 1.4.0)
+    rubocop-github (0.12.0)
+      rubocop (~> 0.59)
     ruby-progressbar (1.10.0)
     simplecov (0.16.1)
       docile (~> 1.1)
