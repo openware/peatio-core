@@ -121,7 +121,7 @@ module Peatio::Auth
 
       payload
     rescue JWT::DecodeError => e
-      raise(Peatio::Auth::Error, "Failed to decode and verify JWT")
+      raise(Peatio::Auth::Error, "Failed to decode and verify JWT: #{e.message}")
     end
   end
 end
