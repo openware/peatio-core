@@ -32,12 +32,12 @@ module Peatio
       protected
 
       def save_block(block, latest_block_number)
-        block[:deposits].map { |d| d[:txid] }.join(',').tap do |txids|
-          Rails.logger.info { "Deposit trancations in block #{block[:id]}: #{txids}" }
+        block[:deposits].map {|d| d[:txid]}.join(',').tap do |txids|
+          Rails.logger.info {"Deposit trancations in block #{block[:id]}: #{txids}"}
         end
 
-        block[:withdrawals].map { |d| d[:txid] }.join(',').tap do |txids|
-          Rails.logger.info { "Withdraw trancations in block #{block[:id]}: #{txids}" }
+        block[:withdrawals].map {|d| d[:txid]}.join(',').tap do |txids|
+          Rails.logger.info {"Withdraw trancations in block #{block[:id]}: #{txids}"}
         end
 
         ActiveRecord::Base.transaction do
@@ -52,14 +52,13 @@ module Peatio
           # If deposit doesn't exist create it.
           deposit = Deposits::Coin
                         .where(currency: currencies)
-                        .find_or_create_by!(deposit_hash.slice(:txid)) do |deposit|
+                        .find_or_create_by!(deposit_hash.slice(:txid, :txout)) do |deposit|
             deposit.assign_attributes(deposit_hash)
           end
 
           deposit.update_column(:block_number, deposit_hash.fetch(:block_number))
           if deposit.confirmations >= blockchain.min_confirmations
-            deposit.accept!
-            deposit.collect!
+            deposit.collect! if deposit.accept!
           end
         end
       end
@@ -76,7 +75,7 @@ module Peatio
 
           # Skip non-existing in database withdrawals.
           if withdrawal.blank?
-            Rails.logger.info { "Skipped withdrawal: #{withdrawal_hash[:txid]}." }
+            Rails.logger.info {"Skipped withdrawal: #{withdrawal_hash[:txid]}."}
             next
           end
 
@@ -95,7 +94,7 @@ module Peatio
       end
 
       def payment_addresses_where(options = {})
-        options = { currency: currencies }.merge(options)
+        options = {currency: currencies}.merge(options)
         PaymentAddress
             .includes(:currency)
             .where(options)
@@ -105,8 +104,8 @@ module Peatio
       end
 
       def wallets_where(options = {})
-        options = { currency: currencies,
-                    kind: %i[cold warm hot] }.merge(options)
+        options = {currency: currencies,
+                   kind: %i[cold warm hot]}.merge(options)
         Wallet
             .includes(:currency)
             .where(options)
@@ -117,4 +116,3 @@ module Peatio
     end
   end
 end
-
