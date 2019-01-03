@@ -99,7 +99,7 @@ describe Peatio::Auth::JWTAuthenticator do
   end
 
   context 'issued at in future' do
-    before { payload[:iat] = (Time.now + 1).to_i }
+    before { payload[:iat] = (Time.now + 10).to_i }
     it 'should not allow JWT' do
       expect do
         auth.authenticate!("Bearer #{token}")
