@@ -35,7 +35,7 @@ module Peatio::MQ::Events
       end
     end
 
-    def initialize(socket, streams)
+    def initialize(socket, streams = {})
       @socket = socket
       @streams = streams
 

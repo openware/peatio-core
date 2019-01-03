@@ -74,7 +74,7 @@ describe Peatio::Ranger do
         end
 
         EM.add_timer(0.1) do
-          ws_client.callback { ws_client.send_msg "garbage" }
+          ws_client.callback { ws_client.send_msg JSON.dump({event:"auth", jwt: "garbage"}) }
           ws_client.disconnect { done }
           ws_client.stream { |msg|
             expect(msg.data).to eq msg_auth_failed
@@ -183,7 +183,7 @@ describe Peatio::Ranger do
           ws_client = ws_connect("/?stream=stream_1&stream=stream_2")
 
           ws_client.callback {
-            auth_msg = {jwt: "Bearer #{valid_token}"}
+            auth_msg = {event: "auth", jwt: "Bearer #{valid_token}"}
 
             ws_client.send_msg auth_msg.to_json
           }
@@ -284,5 +284,133 @@ describe Peatio::Ranger do
         ws_client.disconnect { done }
       }
     end
+
+    it "subscribes to streams dynamically and receive public messages filtered by stream" do
+      em {
+        ws_server do |socket|
+          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
+
+          socket.onopen do |handshake|
+            connection.handshake(handshake)
+          end
+
+          socket.onmessage do |msg|
+            connection.handle(msg)
+          end
+        end
+
+        EM.add_timer(0.1) do
+          ws_client = ws_connect("/")
+
+          ws_client.callback do
+            ws_client.send_msg(JSON.dump({event: "subscribe", streams: ["btcusd.order"]}))
+
+            EM.add_timer(0.1) do
+              Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                key: "btcusd_order_1",
+              })
+              Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                key: "btcusd_order_2",
+              })
+              Peatio::MQ::Events.publish("public", "btcusd", "trade", {
+                key: "btcusd_trade_2",
+              })
+              Peatio::MQ::Events.publish("public", "ethusd", "order", {
+                key: "ethusd_order_1",
+              })
+              Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                key: "btcusd_order_3",
+              })
+            end
+          end
+
+          step = 0
+          ws_client.stream do |msg|
+            step += 1
+
+            case step
+            when 1
+              expect(JSON.load(msg.data)).to eq({"success" => {"message" => "subscribed","streams" => ["btcusd.order"]}})
+            when 2
+              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_1"}]'
+            when 3
+              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_2"}]'
+            when 4
+              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_3"}]'
+              done
+            end
+          end
+          EM.add_timer(1) do
+            fail "Timeout"
+          end
+
+        end
+
+        ws_client.disconnect { done }
+      }
+    end
+
+    it "unsubscribe a stream stop receiving message for this stream" do
+      em {
+        ws_server do |socket|
+          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
+
+          socket.onopen do |handshake|
+            connection.handshake(handshake)
+          end
+
+          socket.onmessage do |msg|
+            connection.handle(msg)
+          end
+        end
+
+        EM.add_timer(0.1) do
+          ws_client = ws_connect("/?stream=btcusd.order")
+
+          ws_client.callback do
+            EM.add_timer(0.1) do
+              ws_client.send_msg(JSON.dump({event: "unsubscribe", streams: ["btcusd.order"]}))
+
+              EM.add_timer(0.1) do
+                Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                  key: "btcusd_order_1",
+                })
+                Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                  key: "btcusd_order_2",
+                })
+                Peatio::MQ::Events.publish("public", "btcusd", "trade", {
+                  key: "btcusd_trade_2",
+                })
+                Peatio::MQ::Events.publish("public", "ethusd", "order", {
+                  key: "ethusd_order_1",
+                })
+                Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                  key: "btcusd_order_3",
+                })
+
+                EM.add_timer(0.1) do
+                  done
+                end
+              end
+            end
+          end
+
+          step = 0
+          ws_client.stream do |msg|
+            step += 1
+
+            case step
+            when 1
+              expect(JSON.load(msg.data)).to eq({"success" => {"message" => "unsubscribed","streams" => []}})
+            else
+              fail "Unexpected message: #{msg}"
+            end
+          end
+        end
+
+        ws_client.disconnect { done }
+      }
+    end
+
   end
 end
