@@ -1,0 +1,10 @@
+FROM ruby:2.5
+
+WORKDIR /home/app
+
+ADD . /home/app
+
+RUN bundle install --jobs 4
+
+EXPOSE 8080
+CMD bin/peatio service start ranger
