@@ -5,7 +5,7 @@ require "peatio/version"
 
 Gem::Specification.new do |spec|
   spec.name = "peatio"
-  spec.version = Peatio::VERSION
+  spec.version = '1.5-local'
   spec.authors = ["Louis B.", "Camille M."]
   spec.email = ["lbellet@heliostech.fr"]
 

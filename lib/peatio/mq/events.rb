@@ -18,6 +18,16 @@ module Peatio::MQ::Events
     end
   end
 
+  def self.inject_events(exchange_name, id, event, payload)
+    @@client ||= begin
+      ranger = PeatioInjectEvents.new exchange_name
+      ranger.connect!
+      ranger
+    end
+
+    @@client.publish(exchange_name, id, event, payload)
+  end
+
   class Client
     attr_accessor :streams, :authorized, :user
 
@@ -123,6 +133,34 @@ module Peatio::MQ::Events
           end
         end
       end
+    end
+  end
+
+  class PeatioInjectEvents
+    attr_accessor :exchange_name
+
+    def initialize(exchange_name="peatio.events.ranger")
+      @exchange_name = exchange_name
+    end
+
+    def connect!
+      if Peatio::MQ::Client.channel.nil?
+        Peatio::MQ::Client.new
+        Peatio::MQ::Client.connect!
+        Peatio::MQ::Client.create_channel!
+      end
+      @exchange = Peatio::MQ::Client.channel.direct(@exchange_name)
+    end
+
+    def publish(exchange_name, id, event, payload)
+      routing_key = [id, event].join(".")
+      serialized_data = JSON.dump(payload)
+
+      @exchange.publish(serialized_data, routing_key: routing_key)
+
+      Peatio::Logger::debug { "published event to #{exchange_name} #{routing_key} " }
+
+      yield if block_given?
     end
   end
 end
