@@ -1,5 +1,6 @@
 require "em-spec/rspec"
 require "bunny-mock"
+require "pry-byebug"
 
 describe Peatio::Ranger do
   let(:logger) { Peatio::Logger }
@@ -105,13 +106,14 @@ describe Peatio::Ranger do
         end
 
         EM.add_timer(0.1) do
-          ws_client.callback {
-            token = auth.encode("").to_json
-            auth_msg = {jwt: "Bearer #{token}"}
-            ws_client.send_msg auth_msg.to_json
-          }
-          ws_client.disconnect { done }
-          ws_client.stream { |msg|
+          token = auth.encode("").to_json
+          wsc = ws_connect("", { "Authorization" => "Bearer #{token}" })
+
+          wsc.callback { binding.pry }
+
+          wsc.disconnect { done }
+
+          wsc.stream { |msg|
             expect(msg.data).to eq msg_auth_failed
             done
           }
@@ -142,6 +144,10 @@ describe Peatio::Ranger do
         end
 
         EM.add_timer(0.1) do
+          ws_client do |socket|
+            socket
+          end
+
           ws_client.callback {
             auth_msg = {jwt: "Bearer #{valid_token}"}
             ws_client.send_msg auth_msg.to_json

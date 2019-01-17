@@ -50,19 +50,6 @@ module Peatio::Ranger
       begin
         data = JSON.parse(msg)
 
-        if !data["jwt"].to_s.empty?
-          authorized, payload = authenticate(data["jwt"])
-          if !authorized
-            send :error, message: "Authentication failed."
-            return
-          end
-          @logger.info [authorized, payload].inspect
-          @client.user = payload[:uid]
-          @client.authorized = true
-          @logger.info "ranger: user #{@client.user} authenticated #{@client.streams}"
-          send :success, message: "Authenticated."
-        end
-
         case data["event"]
         when "subscribe"
           subscribe data["streams"]
@@ -75,11 +62,32 @@ module Peatio::Ranger
       end
     end
 
-    def handshake(handshake)
+    end
+
+    def handshake(hs)
       @client = Peatio::MQ::Events::Client.new(@socket)
-      query = URI::decode_www_form(handshake.query_string)
-      subscribe(query.map{ |item| item.last if item.first == "stream" })
+
+      # pp hs.headers
+      pp hs
+
+      query = URI::decode_www_form(hs.query_string)
+      subscribe(query.map {|item| item.last if item.first == "stream"})
       @logger.info "ranger: WebSocket connection openned"
+
+      if hs.headers.key?("Authorization")
+        authorized, payload = authenticate(hs.headers["Authorization"])
+
+        if !authorized
+          send :error, message: "Authentication failed."
+        else
+          @logger.info [authorized, payload].inspect
+          @client.user = payload[:uid]
+          @client.authorized = true
+          @logger.info "ranger: user #{@client.user} authenticated #{@client.streams}"
+
+          send :success, message: "Authenticated."
+        end
+      end
     end
   end
 
@@ -106,8 +114,8 @@ module Peatio::Ranger
       ) do |socket|
         connection = Connection.new(authenticator, socket, logger)
 
-        socket.onopen do |handshake|
-          connection.handshake(handshake)
+        socket.onopen do |hs|
+          connection.handshake(hs)
         end
 
         socket.onmessage do |msg|
