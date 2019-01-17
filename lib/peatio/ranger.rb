@@ -62,22 +62,18 @@ module Peatio::Ranger
       end
     end
 
-    end
-
     def handshake(hs)
       @client = Peatio::MQ::Events::Client.new(@socket)
-
-      # pp hs.headers
-      pp hs
 
       query = URI::decode_www_form(hs.query_string)
       subscribe(query.map {|item| item.last if item.first == "stream"})
       @logger.info "ranger: WebSocket connection openned"
 
-      if hs.headers.key?("Authorization")
-        authorized, payload = authenticate(hs.headers["Authorization"])
+      if hs.headers.key?("authorization")
+        authorized, payload = authenticate(hs.headers["authorization"])
 
         if !authorized
+          @logger.info "ranger: #{@client.user} authentication failed"
           send :error, message: "Authentication failed."
         else
           @logger.info [authorized, payload].inspect
