@@ -1,11 +1,14 @@
 module Peatio::Injectors
   class PeatioEvents
-    attr_accessor :market, :seller_uid, :buyer_uid, :logger
+    attr_accessor :market, :market_name, :base_unit, :quote_unit, :seller_uid, :buyer_uid, :logger
 
     def run!
       require "time"
       @logger = Peatio::Logger.logger
       @market = "eurusd"
+      @market_name = "EUR/USD"
+      @base_unit = "eur"
+      @quote_unit = "usd"
       @seller_uid = 21
       @buyer_uid = 42
       @messages = create_messages
@@ -32,12 +35,12 @@ module Peatio::Injectors
 
     def create_messages
       [
-        private_trade,
-        order_created,
-        order_canceled,
-        order_completed,
-        order_updated,
-        trade_completed,
+        public_tickers,
+        public_orderbook,
+        private_order,
+        private_trade_user1,
+        private_trade_user2,
+        public_trade,
       ]
     end
 
@@ -52,158 +55,122 @@ module Peatio::Injectors
     alias :completed_at :updated_at
     alias :canceled_at :updated_at
 
-    def private_trade
+    def public_orderbook
+      [
+        "public",
+        market,
+        "update",
+        {
+          "asks": [
+            ["1020.0","0.005"],
+            ["1026.0","0.03"]
+          ],
+          "bids": [
+            ["1000.0","0.25"],
+            ["999.0","0.005"],
+            ["994.0","0.005"],
+            ["1.0","11.0"]
+          ]
+        }
+      ]
+    end
+
+    def public_tickers
+      [
+        "public",
+        "global",
+        "tickers",
+        {
+          market => {
+            "name": market_name,
+            "base_unit": base_unit,
+            "quote_unit": quote_unit,
+            "low": "1000.0",
+            "high": "10000.0",
+            "last": "1000.0",
+            "open": 1000.0,
+            "volume": "0.0",
+            "sell": "1020.0",
+            "buy": "1000.0",
+            "at": Time.now.to_i
+            }
+          }
+      ]
+    end
+
+    def private_order
       [
         "private",
-        "debug_user",
+        "IDABC0000001",
+        "order",
+        {
+          "id": 22,
+          "at": created_at.to_i,
+          "market": market,
+          "kind":"bid",
+          "price":"1026.0",
+          "state":"wait",
+          "volume":"0.001",
+          "origin_volume":"0.001"
+        }
+      ]
+    end
+
+    def private_trade_user1
+      [
+        "private",
+        "IDABC0000001",
         "trade",
         {
-          trade: "some-data",
-        },
+          "id": 7,
+          "kind": "ask",
+          "at": created_at.to_i,
+          "price": "1020.0",
+          "volume": "0.001",
+          "ask_id": 15,
+          "bid_id": 22,
+          "market": market
+        }
       ]
     end
 
-    def order_created
+    def private_trade_user2
       [
-        "public",
-        market,
-        "order_created",
+        "private",
+        "IDABC0000002",
+        "trade",
         {
-          market: "#{market}",
-          type: "buy",
-          trader_uid: buyer_uid,
-          income_unit: "btc",
-          income_fee_type: "relative",
-          income_fee_value: "0.0015",
-          outcome_unit: "usd",
-          outcome_fee_type: "relative",
-          outcome_fee_value: "0.0",
-          initial_income_amount: "14.0",
-          current_income_amount: "14.0",
-          initial_outcome_amount: "0.42",
-          current_outcome_amount: "0.42",
-          strategy: "limit",
-          price: "0.03",
-          state: "open",
-          trades_count: 0,
-          created_at: created_at.iso8601,
-        },
+          "id": 7,
+          "kind": "bid",
+          "at": created_at.to_i,
+          "price": "1020.0",
+          "volume": "0.001",
+          "ask_id": 15,
+          "bid_id": 22,
+          "market": market
+        }
       ]
     end
 
-    def order_canceled
+    def public_trade
       [
         "public",
         market,
-        "order_canceled",
+        "trades",
         {
-          market: "#{market}",
-          type: "sell",
-          trader_uid: seller_uid,
-          income_unit: "usd",
-          income_fee_type: "relative",
-          income_fee_value: "0.0015",
-          outcome_unit: "btc",
-          outcome_fee_type: "relative",
-          outcome_fee_value: "0.0",
-          initial_income_amount: "3.0",
-          current_income_amount: "3.0",
-          initial_outcome_amount: "100.0",
-          current_outcome_amount: "100.0",
-          strategy: "limit",
-          price: "0.03",
-          state: "canceled",
-          trades_count: 0,
-          created_at: created_at.iso8601,
-          canceled_at: canceled_at.iso8601,
-        },
+          "trades": [
+            {
+              "tid": 7,
+              "type": "buy",
+              "date": created_at.to_i,
+              "price": "1020.0",
+              "amount":
+              "0.001"
+            }
+          ]
+        }
       ]
     end
 
-    def order_completed
-      [
-        "public",
-        market,
-        "order_completed", {
-          market: "#{market}",
-          type: "sell",
-          trader_uid: seller_uid,
-          income_unit: "usd",
-          income_fee_type: "relative",
-          income_fee_value: "0.0015",
-          outcome_unit: "btc",
-          outcome_fee_type: "relative",
-          outcome_fee_value: "0.0",
-          initial_income_amount: "3.0",
-          current_income_amount: "0.0",
-          previous_income_amount: "3.0",
-          initial_outcome_amount: "100.0",
-          current_outcome_amount: "0.0",
-          previous_outcome_amount: "100.0",
-          strategy: "limit",
-          price: "0.03",
-          state: "completed",
-          trades_count: 1,
-          created_at: created_at.iso8601,
-          completed_at: completed_at.iso8601,
-        },
-      ]
-    end
-
-    def order_updated
-      [
-        "public",
-        market,
-        "order_updated", {
-          market: "#{market}",
-          type: "sell",
-          trader_uid: seller_uid,
-          income_unit: "usd",
-          income_fee_type: "relative",
-          income_fee_value: "0.0015",
-          outcome_unit: "btc",
-          outcome_fee_type: "relative",
-          outcome_fee_value: "0.0",
-          initial_income_amount: "3.0",
-          current_income_amount: "2.4",
-          previous_income_amount: "3.0",
-          initial_outcome_amount: "100.0",
-          current_outcome_amount: "80.0",
-          previous_outcome_amount: "100.0",
-          strategy: "limit",
-          price: "0.03",
-          state: "open",
-          trades_count: 1,
-          created_at: created_at.iso8601,
-          updated_at: updated_at.iso8601,
-        },
-      ]
-    end
-
-    def trade_completed
-      [
-        "public",
-        market,
-        "trade_completed", {
-          market: "#{market}",
-          price: "0.03",
-          buyer_uid: buyer_uid,
-          buyer_income_unit: "btc",
-          buyer_income_amount: "14.0",
-          buyer_income_fee: "0.021",
-          buyer_outcome_unit: "usd",
-          buyer_outcome_amount: "0.42",
-          buyer_outcome_fee: "0.0",
-          seller_uid: seller_uid,
-          seller_income_unit: "usd",
-          seller_income_amount: "0.42",
-          seller_income_fee: "0.00063",
-          seller_outcome_unit: "btc",
-          seller_outcome_amount: "14.0",
-          seller_outcome_fee: "0.0",
-          completed_at: completed_at.iso8601,
-        },
-      ]
-    end
   end
 end
