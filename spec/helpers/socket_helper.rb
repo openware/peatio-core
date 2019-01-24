@@ -22,18 +22,16 @@ class EM::WebSocketClient
       c.url = uri
       c.protocol_version = opts[:version]
       c.origin = opts[:origin]
-      c.headers = @headers
+      c.headers = headers
     end
   end
 
   def connection_completed
     @connect.yield if @connect
-    pp headers
     @hs = ::WebSocket::Handshake::Client.new(url:     @url,
-                                            headers: @headers,
-                                            origin:  @origin,
-                                            version: @protocol_version)
-    pp '@hs', @hs.to_s
+                                             headers: @headers,
+                                             origin:  @origin,
+                                             version: @protocol_version)
     send_data @hs.to_s
   end
 end

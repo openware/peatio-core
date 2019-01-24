@@ -1,13 +1,8 @@
 require "em-spec/rspec"
 require "bunny-mock"
-require "pry-byebug"
 
 describe Peatio::Ranger do
   let(:logger) { Peatio::Logger }
-
-  let(:ws_client) {
-    ws_connect
-  }
 
   let(:jwt_private_key) {
     OpenSSL::PKey::RSA.generate 2048
@@ -34,19 +29,19 @@ describe Peatio::Ranger do
   }
 
   let(:valid_token_payload) {
-    payload = {:iat => 1534242281,
-               :exp => (Time.now + 3600).to_i,
-               :sub => "session",
-               :iss => "barong",
-               :aud => ["peatio",
-                        "barong"],
-               :jti => "BEF5617B7B2762DDE61702F5",
-               :uid => "IDE8E2280FD1",
-               :email => "email@heliostech.fr",
-               :role => "admin",
-               :level => 4,
-
-               :state => "active"}
+    {
+      :iat => 1534242281,
+      :exp => (Time.now + 3600).to_i,
+      :sub => "session",
+      :iss => "barong",
+      :aud => ["peatio", "barong"],
+      :jti => "BEF5617B7B2762DDE61702F5",
+      :uid => "IDE8E2280FD1",
+      :email => "email@heliostech.fr",
+      :role => "admin",
+      :level => 4,
+      :state => "active"
+    }
   }
 
   let(:valid_token) {
@@ -54,37 +49,6 @@ describe Peatio::Ranger do
   }
 
   include EM::SpecHelper
-
-  context "invalid json data" do
-    before do
-      Peatio::MQ::Client.new
-      Peatio::MQ::Client.connection = BunnyMock.new.start
-      Peatio::MQ::Client.create_channel!
-    end
-
-    it "denies access" do
-      em {
-        ws_server do |socket|
-          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
-          socket.onopen do |handshake|
-            connection.handshake(handshake)
-          end
-          socket.onmessage do |msg|
-            connection.handle(msg)
-          end
-        end
-
-        EM.add_timer(0.1) do
-          ws_client.callback { ws_client.send_msg JSON.dump({event:"auth", jwt: "garbage"}) }
-          ws_client.disconnect { done }
-          ws_client.stream { |msg|
-            expect(msg.data).to eq msg_auth_failed
-            done
-          }
-        end
-      }
-    end
-  end
 
   context "invalid token" do
     before do
@@ -95,6 +59,8 @@ describe Peatio::Ranger do
 
     it "denies access" do
       em {
+        EM.add_timer(1) { fail "timeout" }
+
         ws_server do |socket|
           connection = Peatio::Ranger::Connection.new(auth, socket, logger)
           socket.onopen do |handshake|
@@ -106,10 +72,12 @@ describe Peatio::Ranger do
         end
 
         EM.add_timer(0.1) do
-          token = auth.encode("").to_json
-          wsc = ws_connect("", { "Authorization" => "Bearer #{token}" })
+          token = auth.encode("")
+          wsc = ws_connect("", { "authorization" => "Bearer #{token}" })
 
-          wsc.callback { binding.pry }
+          wsc.callback {
+            puts "Connected"
+          }
 
           wsc.disconnect { done }
 
@@ -117,6 +85,7 @@ describe Peatio::Ranger do
             expect(msg.data).to eq msg_auth_failed
             done
           }
+
         end
       }
     end
@@ -131,6 +100,7 @@ describe Peatio::Ranger do
 
     it "allows access" do
       em {
+        EM.add_timer(1) { fail "timeout" }
         ws_server do |socket|
           connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
@@ -143,17 +113,12 @@ describe Peatio::Ranger do
           end
         end
 
-        EM.add_timer(0.1) do
-          ws_client do |socket|
-            socket
-          end
 
-          ws_client.callback {
-            auth_msg = {jwt: "Bearer #{valid_token}"}
-            ws_client.send_msg auth_msg.to_json
-          }
-          ws_client.disconnect { done }
-          ws_client.stream { |msg|
+        EM.add_timer(0.1) do
+          wsc = ws_connect("", { "authorization" => "Bearer #{valid_token}" })
+
+          wsc.disconnect { done }
+          wsc.stream { |msg|
             expect(msg.data).to eq msg_auth_success
             done
           }
@@ -173,6 +138,8 @@ describe Peatio::Ranger do
 
     it "sends messages that belong to the user and filtered by stream" do
       em {
+        EM.add_timer(1) { fail "timeout" }
+
         ws_server do |socket|
           connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
@@ -186,18 +153,13 @@ describe Peatio::Ranger do
         end
 
         EM.add_timer(0.1) do
-          ws_client = ws_connect("/?stream=stream_1&stream=stream_2")
-
-          ws_client.callback {
-            auth_msg = {event: "auth", jwt: "Bearer #{valid_token}"}
-
-            ws_client.send_msg auth_msg.to_json
-          }
+          wsc = ws_connect("/?stream=stream_1&stream=stream_2", { "authorization" => "Bearer #{valid_token}" })
 
           step = 0
-          ws_client.stream { |msg|
+          wsc.stream { |msg|
             step += 1
 
+            puts "Recevied: #{msg}"
             case step
             when 1
               expect(msg.data).to eq msg_auth_success
@@ -230,14 +192,14 @@ describe Peatio::Ranger do
               done
             end
           }
+          wsc.disconnect { done }
         end
-
-        ws_client.disconnect { done }
       }
     end
 
     it "sends public messages filtered by stream" do
       em {
+        EM.add_timer(1) { fail "timeout" }
         ws_server do |socket|
           connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
@@ -285,14 +247,15 @@ describe Peatio::Ranger do
               done
             end
           }
+          ws_client.disconnect { done }
         end
 
-        ws_client.disconnect { done }
       }
     end
 
     it "subscribes to streams dynamically and receive public messages filtered by stream" do
       em {
+        EM.add_timer(1) { fail "timeout" }
         ws_server do |socket|
           connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
@@ -350,14 +313,14 @@ describe Peatio::Ranger do
             fail "Timeout"
           end
 
+          ws_client.disconnect { done }
         end
-
-        ws_client.disconnect { done }
       }
     end
 
     it "unsubscribe a stream stop receiving message for this stream" do
       em {
+        EM.add_timer(1) { fail "timeout" }
         ws_server do |socket|
           connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
@@ -412,9 +375,9 @@ describe Peatio::Ranger do
               fail "Unexpected message: #{msg}"
             end
           end
+          ws_client.disconnect { done }
         end
 
-        ws_client.disconnect { done }
       }
     end
 

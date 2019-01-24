@@ -74,14 +74,18 @@ module Peatio::Ranger
 
         if !authorized
           @logger.info "ranger: #{@client.user} authentication failed"
-          send :error, message: "Authentication failed."
+          EM.add_timer(0.1) do
+            send :error, message: "Authentication failed."
+          end
         else
           @logger.info [authorized, payload].inspect
           @client.user = payload[:uid]
           @client.authorized = true
           @logger.info "ranger: user #{@client.user} authenticated #{@client.streams}"
 
-          send :success, message: "Authenticated."
+          EM.add_timer(0.1) do
+            send :success, message: "Authenticated."
+          end
         end
       end
     end
