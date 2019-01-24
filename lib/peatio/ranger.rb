@@ -69,23 +69,17 @@ module Peatio::Ranger
       subscribe(query.map {|item| item.last if item.first == "stream"})
       @logger.info "ranger: WebSocket connection openned"
 
-      if hs.headers.key?("authorization")
-        authorized, payload = authenticate(hs.headers["authorization"])
+      if hs.headers.key?("Authorization")
+        authorized, payload = authenticate(hs.headers["Authorization"])
 
         if !authorized
           @logger.info "ranger: #{@client.user} authentication failed"
-          EM.add_timer(0.1) do
-            send :error, message: "Authentication failed."
-          end
+          raise EM::WebSocket::HandshakeError, "Authorization failed"
         else
           @logger.info [authorized, payload].inspect
           @client.user = payload[:uid]
           @client.authorized = true
           @logger.info "ranger: user #{@client.user} authenticated #{@client.streams}"
-
-          EM.add_timer(0.1) do
-            send :success, message: "Authenticated."
-          end
         end
       end
     end
@@ -110,7 +104,7 @@ module Peatio::Ranger
       EM::WebSocket.start(
         host: host,
         port: port,
-        secure: false,
+        secure: false
       ) do |socket|
         connection = Connection.new(authenticator, socket, logger)
 
@@ -122,8 +116,12 @@ module Peatio::Ranger
           connection.handle(msg)
         end
 
+        socket.onping do |value|
+          logger.info "Received ping: #{value}"
+        end
+
         socket.onclose do
-          logger.info "ranger: WebSocket connection closed"
+          logger.info "ranger: websocket connection closed"
         end
 
         socket.onerror do |e|

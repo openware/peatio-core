@@ -69,26 +69,20 @@ describe Peatio::Ranger do
           socket.onmessage do |msg|
             connection.handle(msg)
           end
+          socket.onerror do |e|
+            expect(e.message).to eq "Authorization failed"
+            logger.error "ranger: WebSocket Error: #{e.message}"
+          end
         end
 
         EM.add_timer(0.1) do
           token = auth.encode("")
-          wsc = ws_connect("", { "authorization" => "Bearer #{token}" })
-
-          wsc.callback {
-            puts "Connected"
-          }
-
+          wsc = ws_connect("", { "Authorization" => "Bearer #{token}" })
           wsc.disconnect { done }
-
-          wsc.stream { |msg|
-            expect(msg.data).to eq msg_auth_failed
-            done
-          }
-
         end
       }
     end
+
   end
 
   context "valid token" do
@@ -108,6 +102,10 @@ describe Peatio::Ranger do
             connection.handshake(handshake)
           end
 
+          socket.onerror do |e|
+            logger.error "ranger: WebSocket Error: #{e.message}"
+          end
+
           socket.onmessage do |msg|
             connection.handle(msg)
           end
@@ -115,13 +113,13 @@ describe Peatio::Ranger do
 
 
         EM.add_timer(0.1) do
-          wsc = ws_connect("", { "authorization" => "Bearer #{valid_token}" })
-
-          wsc.disconnect { done }
-          wsc.stream { |msg|
-            expect(msg.data).to eq msg_auth_success
+          wsc = ws_connect("", { "Authorization" => "Bearer #{valid_token}" })
+          wsc.callback {
+            logger.info "Connected"
+            expect("ok").to eq "ok"
             done
           }
+          wsc.disconnect { done }
         end
       }
     end
@@ -153,41 +151,36 @@ describe Peatio::Ranger do
         end
 
         EM.add_timer(0.1) do
-          wsc = ws_connect("/?stream=stream_1&stream=stream_2", { "authorization" => "Bearer #{valid_token}" })
+          wsc = ws_connect("/?stream=stream_1&stream=stream_2", { "Authorization" => "Bearer #{valid_token}" })
+
+          wsc.callback {
+            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_1", {
+              key: "stream_1_user_1",
+            })
+            Peatio::MQ::Events.publish("private", "SOMEUSER2", "stream_1", {
+              key: "stream_1_user_2",
+            })
+            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
+              key: "stream_2_user_1",
+            })
+            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_3", {
+              key: "stream_3_user_1",
+            })
+            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
+              key: "stream_2_user_1_message_2",
+            })
+          }
 
           step = 0
           wsc.stream { |msg|
             step += 1
-
-            puts "Recevied: #{msg}"
+            logger.debug "Received: #{msg}"
             case step
             when 1
-              expect(msg.data).to eq msg_auth_success
-
-              Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_1", {
-                key: "stream_1_user_1",
-              })
-
-              Peatio::MQ::Events.publish("private", "SOMEUSER2", "stream_1", {
-                key: "stream_1_user_2",
-              })
-
-              Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
-                key: "stream_2_user_1",
-              })
-
-              Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_3", {
-                key: "stream_3_user_1",
-              })
-
-              Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
-                key: "stream_2_user_1_message_2",
-              })
-            when 2
               expect(msg.data).to eq '["stream_1",{"key":"stream_1_user_1"}]'
-            when 3
+            when 2
               expect(msg.data).to eq '["stream_2",{"key":"stream_2_user_1"}]'
-            when 4
+            when 3
               expect(msg.data).to eq '["stream_2",{"key":"stream_2_user_1_message_2"}]'
               done
             end
