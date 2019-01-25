@@ -50,19 +50,6 @@ module Peatio::Ranger
       begin
         data = JSON.parse(msg)
 
-        if !data["jwt"].to_s.empty?
-          authorized, payload = authenticate(data["jwt"])
-          if !authorized
-            send :error, message: "Authentication failed."
-            return
-          end
-          @logger.info [authorized, payload].inspect
-          @client.user = payload[:uid]
-          @client.authorized = true
-          @logger.info "ranger: user #{@client.user} authenticated #{@client.streams}"
-          send :success, message: "Authenticated."
-        end
-
         case data["event"]
         when "subscribe"
           subscribe data["streams"]
@@ -75,11 +62,26 @@ module Peatio::Ranger
       end
     end
 
-    def handshake(handshake)
+    def handshake(hs)
       @client = Peatio::MQ::Events::Client.new(@socket)
-      query = URI::decode_www_form(handshake.query_string)
-      subscribe(query.map{ |item| item.last if item.first == "stream" })
+
+      query = URI::decode_www_form(hs.query_string)
+      subscribe(query.map {|item| item.last if item.first == "stream"})
       @logger.info "ranger: WebSocket connection openned"
+
+      if hs.headers_downcased.key?("authorization")
+        authorized, payload = authenticate(hs.headers["authorization"])
+
+        if !authorized
+          @logger.info "ranger: #{@client.user} authentication failed"
+          raise EM::WebSocket::HandshakeError, "Authorization failed"
+        else
+          @logger.info [authorized, payload].inspect
+          @client.user = payload[:uid]
+          @client.authorized = true
+          @logger.info "ranger: user #{@client.user} authenticated #{@client.streams}"
+        end
+      end
     end
   end
 
@@ -102,20 +104,24 @@ module Peatio::Ranger
       EM::WebSocket.start(
         host: host,
         port: port,
-        secure: false,
+        secure: false
       ) do |socket|
         connection = Connection.new(authenticator, socket, logger)
 
-        socket.onopen do |handshake|
-          connection.handshake(handshake)
+        socket.onopen do |hs|
+          connection.handshake(hs)
         end
 
         socket.onmessage do |msg|
           connection.handle(msg)
         end
 
+        socket.onping do |value|
+          logger.info "Received ping: #{value}"
+        end
+
         socket.onclose do
-          logger.info "ranger: WebSocket connection closed"
+          logger.info "ranger: websocket connection closed"
         end
 
         socket.onerror do |e|

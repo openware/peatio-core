@@ -108,7 +108,7 @@ module Peatio::MQ::Events
         if type == "private"
           Client.user(id) do |client|
             if client.streams.include?(event)
-              client.send_payload [event, payload_decoded]
+              client.send_payload(event => payload_decoded)
             end
           end
 
@@ -119,7 +119,7 @@ module Peatio::MQ::Events
 
         Client.all.each do |handler|
           if handler.streams.include?(id) or handler.streams.include?(stream)
-            handler.send_payload [stream, payload_decoded]
+            handler.send_payload(stream => payload_decoded)
           end
         end
       end
