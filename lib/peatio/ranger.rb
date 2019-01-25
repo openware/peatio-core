@@ -69,8 +69,8 @@ module Peatio::Ranger
       subscribe(query.map {|item| item.last if item.first == "stream"})
       @logger.info "ranger: WebSocket connection openned"
 
-      if hs.headers.key?("Authorization")
-        authorized, payload = authenticate(hs.headers["Authorization"])
+      if hs.headers_downcased.key?("authorization")
+        authorized, payload = authenticate(hs.headers["authorization"])
 
         if !authorized
           @logger.info "ranger: #{@client.user} authentication failed"

@@ -177,11 +177,11 @@ describe Peatio::Ranger do
             logger.debug "Received: #{msg}"
             case step
             when 1
-              expect(msg.data).to eq '["stream_1",{"key":"stream_1_user_1"}]'
+              expect(msg.data).to eq '{"stream_1":{"key":"stream_1_user_1"}}'
             when 2
-              expect(msg.data).to eq '["stream_2",{"key":"stream_2_user_1"}]'
+              expect(msg.data).to eq '{"stream_2":{"key":"stream_2_user_1"}}'
             when 3
-              expect(msg.data).to eq '["stream_2",{"key":"stream_2_user_1_message_2"}]'
+              expect(msg.data).to eq '{"stream_2":{"key":"stream_2_user_1_message_2"}}'
               done
             end
           }
@@ -232,11 +232,11 @@ describe Peatio::Ranger do
 
             case step
             when 1
-              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_1"}]'
+              expect(msg.data).to eq '{"btcusd.order":{"key":"btcusd_order_1"}}'
             when 2
-              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_2"}]'
+              expect(msg.data).to eq '{"btcusd.order":{"key":"btcusd_order_2"}}'
             when 3
-              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_3"}]'
+              expect(msg.data).to eq '{"btcusd.order":{"key":"btcusd_order_3"}}'
               done
             end
           }
@@ -294,11 +294,11 @@ describe Peatio::Ranger do
             when 1
               expect(JSON.load(msg.data)).to eq({"success" => {"message" => "subscribed","streams" => ["btcusd.order"]}})
             when 2
-              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_1"}]'
+              expect(msg.data).to eq '{"btcusd.order":{"key":"btcusd_order_1"}}'
             when 3
-              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_2"}]'
+              expect(msg.data).to eq '{"btcusd.order":{"key":"btcusd_order_2"}}'
             when 4
-              expect(msg.data).to eq '["btcusd.order",{"key":"btcusd_order_3"}]'
+              expect(msg.data).to eq '{"btcusd.order":{"key":"btcusd_order_3"}}'
               done
             end
           end
