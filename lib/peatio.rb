@@ -18,4 +18,7 @@ module Peatio
   require_relative "peatio/injectors/peatio_events"
   require_relative "peatio/security/key_generator"
   require_relative "peatio/auth/jwt_authenticator"
+  require_relative "peatio/blockchain_service/base"
+  require_relative "peatio/blockchain_service/error"
+  require_relative "peatio/blockchain_service/ethereum"
 end
