@@ -23,7 +23,8 @@ module Peatio::BlockchainService
     end
 
     def current_block
-      @current_block || raise(Error, "current block is nil")
+      puts "current-block = #{@current_block}"
+      @current_block
     end
 
     def client
@@ -44,7 +45,7 @@ module Peatio::BlockchainService
         end
 
         payment_addresses
-          .select { |pa| pa.address = client.to_address(txn)}
+          .select { |pa| pa.address.in?(client.to_address(txn))}
           .map do |payment_address|
             deposit_txs = client.build_transaction(txn, @block_json,
                                                    payment_address.address,
@@ -75,23 +76,22 @@ module Peatio::BlockchainService
     def filtered_withdrawals(withdrawals, &block)
       @block_json
         .fetch('transactions')
-        .each_with_object([]) do |block_txn, withdrawals|
+        .each_with_object([]) do |block_txn, withdrawals_h|
 
-        withdrawals
-          .select { |w| w.txid == client.normalize_txid(block_txn.fetch('hash')) }
+        withdrawals.select { |w| w.txid == client.normalize_txid(block_txn.fetch('hash')) }
           .each do |withdraw|
 
           # TODO: Check this.
-          # if block_txn.fetch('input').hex <= 0
-          #   txn = block_txn
-          #   next if client.invalid_eth_transaction?(txn)
-          # else
-          #   txn = client.get_txn_receipt(block_txn.fetch('hash'))
-          #   if txn.nil? || client.invalid_erc20_transaction?(txn)
-          #     withdraw.fail!
-          #     next
-          #   end
-          # end
+          if block_txn.fetch('input').hex <= 0
+            txn = block_txn
+            next if client.invalid_eth_transaction?(txn)
+          else
+            txn = client.get_txn_receipt(block_txn.fetch('hash'))
+            if txn.nil? || client.invalid_erc20_transaction?(txn)
+              # withdraw.fail! # TODO: Handle this !!!
+              next
+            end
+          end
 
           withdraw_txs = client.build_transaction(txn, @block_json, withdraw.rid, withdraw.currency)  # block_txn required for ETH transaction
           withdraw_txs.fetch(:entries).each do |entry|
@@ -100,7 +100,7 @@ module Peatio::BlockchainService
                             amount:         entry[:amount],
                             block_number:   withdraw_txs[:block_number] }
             block.call(withdrawal) if block_given?
-            withdrawals << withdrawal
+            withdrawals_h << withdrawal
           end
         end
       end
