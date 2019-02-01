@@ -1,6 +1,8 @@
 module Peatio::BlockchainService
   class Ethereum < Base
 
+    # attr_reader :current_block
+
     def fetch_block!(block_number)
       if blockchain.height >= latest_block
         Rails.logger.info { "Skip synchronization. No new blocks detected height: #{blockchain.height}, latest_block: #{latest_block}" }
@@ -18,6 +20,10 @@ module Peatio::BlockchainService
       cache.fetch(cache_key(:latest_block), expires_in: 5.seconds) do
         client.latest_block_number
       end
+    end
+
+    def current_block
+      @current_block || raise(Error, "current block is nil")
     end
 
     def client
