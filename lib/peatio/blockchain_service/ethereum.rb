@@ -1,13 +1,13 @@
 module Peatio::BlockchainService
   class Ethereum < Base
 
-    def fetch_block!
+    def fetch_block!(block_number)
       if blockchain.height >= latest_block
         Rails.logger.info { "Skip synchronization. No new blocks detected height: #{blockchain.height}, latest_block: #{latest_block}" }
         nil
       end
       # TODO: Do we need @current_block here ???
-      @current_block = blockchain.height
+      @current_block = block_number
       @block_json = client.get_block(@current_block)
       if @block_json.blank? || @block_json['transactions'].blank?
         # TODO: Do something special!!!
