@@ -53,12 +53,12 @@ module Peatio::BlockchainService
               #   next
               # end
               deposit = { txid:           deposit_txs[:id],
-                            address:        entry[:address],
-                            amount:         entry[:amount],
-                            member:         payment_address.account.member,
-                            currency:       payment_address.currency,
-                            txout:          entry[:txout],
-                            block_number:   deposit_txs[:block_number] }
+                          address:        entry[:address],
+                          amount:         entry[:amount],
+                          member:         payment_address.account.member,
+                          currency:       payment_address.currency,
+                          txout:          entry[:txout],
+                          block_number:   deposit_txs[:block_number] }
               block.call(deposit) if block_given? # Is it right ?
               deposits << deposit
             end
@@ -90,9 +90,9 @@ module Peatio::BlockchainService
           withdraw_txs = client.build_transaction(txn, block_json, withdraw.rid, withdraw.currency)  # block_txn required for ETH transaction
           withdraw_txs.fetch(:entries).each do |entry|
             withdrawal =  { txid:           withdraw_txs[:id],
-                             rid:            entry[:address],
-                             amount:         entry[:amount],
-                             block_number:   withdraw_txs[:block_number] }
+                            rid:            entry[:address],
+                            amount:         entry[:amount],
+                            block_number:   withdraw_txs[:block_number] }
             block.call(withdrawal) if block_given?
             withdrawals << withdrawal
           end
