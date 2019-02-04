@@ -23,7 +23,6 @@ module Peatio::BlockchainService
     end
 
     def current_block
-      puts "current-block = #{@current_block}"
       @current_block
     end
 
@@ -41,10 +40,7 @@ module Peatio::BlockchainService
           next if client.invalid_eth_transaction?(txn)
         else
           txn = client.get_txn_receipt(block_txn.fetch('hash'))
-          if txn.nil? || client.invalid_erc20_transaction?(txn)
-            deposits << { txid: block_txn.fetch('hash')}
-            next
-          end
+          next if txn.nil? || client.invalid_erc20_transaction?(txn)
         end
 
         payment_addresses
@@ -85,8 +81,9 @@ module Peatio::BlockchainService
           else
             txn = client.get_txn_receipt(block_txn.fetch('hash'))
             if txn.nil? || client.invalid_erc20_transaction?(txn)
-              # withdrawals_h << { txid: block_txn.fetch('hash')}
-              # next
+              # Call block with successful: false.
+              block.call({ txid: block_txn.fetch('hash') }, false) if block_given?
+              next
             end
           end
 
