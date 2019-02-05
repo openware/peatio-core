@@ -14,6 +14,8 @@ module Peatio::Auth
   # * JWT_ISSUED_AT_LEEWAY
   # * JWT_EXPIRATION_LEEWAY
   # * JWT_NOT_BEFORE_LEEWAY
+  # * JWT_ID
+  # * JWT_SUBJECT
   #
   # @see https://github.com/jwt/ruby-jwt JWT validation parameters.
   #
@@ -59,11 +61,11 @@ module Peatio::Auth
         iss: ENV["JWT_ISSUER"],
         verify_iss: !ENV["JWT_ISSUER"].nil?,
         verify_iat: true,
-        verify_jti: true,
+        verify_jti: !ENV["JWT_ID"].nil?,
         aud: ENV["JWT_AUDIENCE"].to_s.split(",").reject(&:empty?),
         verify_aud: !ENV["JWT_AUDIENCE"].nil?,
-        sub: "session",
-        verify_sub: true,
+        sub: ENV["JWT_SUBJECT"],
+        verify_sub: !ENV["JWT_SUBJECT"].nil?,
         algorithms: [ENV["JWT_ALGORITHM"] || "RS256"],
         leeway: ENV["JWT_DEFAULT_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
         iat_leeway: ENV["JWT_ISSUED_AT_LEEWAY"].yield_self { |n| n.to_i unless n.nil? },
