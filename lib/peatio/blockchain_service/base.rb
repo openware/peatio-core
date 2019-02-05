@@ -1,48 +1,40 @@
 module Peatio::BlockchainService
   class Base
-    attr_reader :logger, :cache, :blockchain, :currencies
+    attr_reader :cache, :blockchain
 
-    def initialize(logger:, cache:, blockchain:, currencies:)
-      @logger = logger
+    def initialize(cache:, blockchain:)
       @cache = cache
       @blockchain = blockchain
-      @currencies = currencies
     end
 
     # TODO: Doc
-    def fetch_block!
+    def fetch_block!(block_number)
       method_not_implemented
     end
 
     # TODO: Doc
-    def filtered_deposits(addresses, &block)
+    def filtered_deposits(payment_addresses, &block)
       method_not_implemented
     end
 
     # TODO: Doc
-    def filtered_withdrawals(txids, &block)
+    def filtered_withdrawals(withdrawals, &block)
       method_not_implemented
     end
 
     # TODO: Doc
-    def current_block
+    def current_block_number
       method_not_implemented
     end
 
     # TODO: Doc
-    def latest_block
+    def latest_block_number
       method_not_implemented
     end
 
-    # TODO: Tricky code!!!
-    # TODO: Doc
-    def client
-      @client ||= self.class.name.sub("Service", "Client").constantize.new(blockchain)
-    end
-
-    private
+    protected
     def cache_key(*suffixes)
-      [self.class.name.underscore.sub("/", ":"), suffixes].join(":")
+      [self.class.name.underscore.gsub("/", ":"), suffixes].join(":")
     end
   end
 end

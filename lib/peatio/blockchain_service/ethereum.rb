@@ -1,36 +1,42 @@
 module Peatio::BlockchainService
   class Ethereum < Base
 
-    # attr_reader :current_block
+    BlockGreaterThanLatestError = Class.new(StandardError)
+    FetchBlockError = Class.new(StandardError)
+    EmptyCurrentBlockError = Class.new(StandardError)
 
     def fetch_block!(block_number)
-      if blockchain.height >= latest_block
-        Rails.logger.info { "Skip synchronization. No new blocks detected height: #{blockchain.height}, latest_block: #{latest_block}" }
-        nil
-      end
-      # TODO: Do we need @current_block here ???
-      @current_block = block_number
-      @block_json = client.get_block(@current_block)
+      raise BlockGreaterThanLatestError if block_number > latest_block_number
+
+      @block_json = client.get_block(block_number)
       if @block_json.blank? || @block_json['transactions'].blank?
-        # TODO: Do something special!!!
+        raise FetchBlockError
       end
     end
 
-    def latest_block
+    def current_block_number
+      require_current_block!
+      @block_json['number'].to_i(16)
+    end
+
+    def latest_block_number
       cache.fetch(cache_key(:latest_block), expires_in: 5.seconds) do
         client.latest_block_number
       end
     end
 
-    def current_block
-      @current_block
-    end
+    # TODO: Tricky code!!!
+    # TODO: Doc
+    # def client
+    #   @client ||= self.class.name.sub("Service", "Client").constantize.new(blockchain)
+    # end
 
     def client
       ::BlockchainClient::Ethereum.new(@blockchain)
     end
 
     def filtered_deposits(payment_addresses, &block)
+      require_current_block!
       @block_json
         .fetch('transactions')
         .each_with_object([]) do |block_txn, deposits|
@@ -58,7 +64,7 @@ module Peatio::BlockchainService
                           txout:          entry[:txout],
                           block_number:   deposit_txs[:block_number] }
 
-              block.call(deposit) if block_given? # Is it right ?
+              block.call(deposit) if block_given?
               deposits << deposit
             end
           end
@@ -66,6 +72,7 @@ module Peatio::BlockchainService
     end
 
     def filtered_withdrawals(withdrawals, &block)
+      require_current_block!
       @block_json
         .fetch('transactions')
         .each_with_object([]) do |block_txn, withdrawals_h|
@@ -74,20 +81,19 @@ module Peatio::BlockchainService
           .where(txid: block_txn.fetch('hash'))
           .each do |withdraw|
 
-          # TODO: Check this.
           if block_txn.fetch('input').hex <= 0
             txn = block_txn
             next if client.invalid_eth_transaction?(txn)
           else
             txn = client.get_txn_receipt(block_txn.fetch('hash'))
             if txn.nil? || client.invalid_erc20_transaction?(txn)
-              # Call block with successful: false.
+              # Call block for unsuccessful txid.
               block.call({ txid: block_txn.fetch('hash') }, false) if block_given?
               next
             end
           end
 
-          withdraw_txs = client.build_transaction(txn, @block_json, withdraw.rid, withdraw.currency)  # block_txn required for ETH transaction
+          withdraw_txs = client.build_transaction(txn, @block_json, withdraw.rid, withdraw.currency)
           withdraw_txs.fetch(:entries).each do |entry|
             withdrawal =  { txid:           withdraw_txs[:id],
                             rid:            entry[:address],
@@ -98,6 +104,11 @@ module Peatio::BlockchainService
           end
         end
       end
+    end
+
+    private
+    def require_current_block!
+      raise EmptyCurrentBlockError if @block_json.blank?
     end
   end
 end
