@@ -90,7 +90,9 @@ describe Peatio::Auth::JWTAuthenticator do
   end
 
   context 'missing JWT ID' do
-    before { payload[:jti] = nil }
+    before { ENV['JWT_ID'] = 'BEF5617B7B2762DDE61702F5' }
+    before { payload[:jti] = 'BEF5617B7B2762DDE61702F5' }
+    after  { ENV.delete('JWT_ID') }
     it 'should require JTI' do
       expect do
         auth.authenticate!("Bearer #{token}")
