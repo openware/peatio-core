@@ -1,6 +1,6 @@
 module Peatio::BlockchainService
   class Base
-    attr_reader :cache, :blockchain
+    attr_reader :blockchain
 
     def initialize(cache:, blockchain:)
       @cache = cache
@@ -30,6 +30,18 @@ module Peatio::BlockchainService
     # TODO: Doc
     def latest_block_number
       method_not_implemented
+    end
+
+    def client
+      method_not_implemented
+    end
+
+    def supports_cash_addr_format?
+      false
+    end
+
+    def case_sensitive?
+      true
     end
 
     protected

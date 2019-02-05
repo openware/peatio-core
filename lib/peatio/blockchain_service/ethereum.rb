@@ -20,19 +20,13 @@ module Peatio::BlockchainService
     end
 
     def latest_block_number
-      cache.fetch(cache_key(:latest_block), expires_in: 5.seconds) do
+      @cache.fetch(cache_key(:latest_block), expires_in: 5.seconds) do
         client.latest_block_number
       end
     end
 
-    # TODO: Tricky code!!!
-    # TODO: Doc
-    # def client
-    #   @client ||= self.class.name.sub("Service", "Client").constantize.new(blockchain)
-    # end
-
     def client
-      ::BlockchainClient::Ethereum.new(@blockchain)
+      @client ||= Peatio::BlockchainClient::Ethereum.new(@blockchain)
     end
 
     def filtered_deposits(payment_addresses, &block)
@@ -104,6 +98,10 @@ module Peatio::BlockchainService
           end
         end
       end
+    end
+
+    def case_sensitive?
+      false
     end
 
     private
