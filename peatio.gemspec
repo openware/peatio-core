@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "amqp"
   spec.add_dependency "eventmachine"
   spec.add_dependency "em-websocket"
+  spec.add_dependency "faraday", "~> 0.14.0"
   spec.add_dependency "mysql2"
   spec.add_dependency "jwt"
   spec.add_dependency "bunny"

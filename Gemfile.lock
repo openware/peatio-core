@@ -7,6 +7,7 @@ PATH
       clamp
       em-websocket
       eventmachine
+      faraday (~> 0.14.0)
       jwt
       method-not-implemented
       mysql2
@@ -36,11 +37,14 @@ GEM
       eventmachine
       websocket
     eventmachine (1.2.7)
+    faraday (0.14.0)
+      multipart-post (>= 1.2, < 3)
     http_parser.rb (0.6.0)
     jaro_winkler (1.5.1)
     json (2.1.0)
     jwt (2.1.0)
     method-not-implemented (1.0.1)
+    multipart-post (2.0.0)
     mysql2 (0.5.2)
     parallel (1.12.1)
     parser (2.5.1.2)

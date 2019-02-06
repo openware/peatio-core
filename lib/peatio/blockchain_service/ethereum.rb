@@ -1,6 +1,8 @@
 module Peatio::BlockchainService
   class Ethereum < Base
 
+    include Helpers
+
     BlockGreaterThanLatestError = Class.new(StandardError)
     FetchBlockError = Class.new(StandardError)
     EmptyCurrentBlockError = Class.new(StandardError)

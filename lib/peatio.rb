@@ -22,5 +22,6 @@ module Peatio
   require_relative "peatio/blockchain_client/ethereum"
   require_relative "peatio/blockchain_service/base"
   require_relative "peatio/blockchain_service/error"
+  require_relative "peatio/blockchain_service/helpers"
   require_relative "peatio/blockchain_service/ethereum"
 end

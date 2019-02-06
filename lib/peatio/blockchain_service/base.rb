@@ -37,16 +37,11 @@ module Peatio::BlockchainService
     end
 
     def supports_cash_addr_format?
-      false
+      method_not_implemented
     end
 
     def case_sensitive?
-      true
-    end
-
-    protected
-    def cache_key(*suffixes)
-      [self.class.name.underscore.gsub("/", ":"), suffixes].join(":")
+      method_not_implemented
     end
   end
 end

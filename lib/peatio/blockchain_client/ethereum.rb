@@ -6,10 +6,8 @@ module Peatio::BlockchainClient
     TOKEN_EVENT_IDENTIFIER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
     SUCCESS = '0x1'
 
-    attr_reader :blockchain
-
+    # TODO: Don't need whole blockhain!
     def initialize(blockchain)
-      @blockchain = blockchain
       @json_rpc_call_id  = 0
       @json_rpc_endpoint = URI.parse(blockchain.server)
     end
@@ -108,7 +106,6 @@ module Peatio::BlockchainClient
         end
       end
     end
-    # memoize :connection
 
     def json_rpc(method, params = [])
       response = connection.post \
