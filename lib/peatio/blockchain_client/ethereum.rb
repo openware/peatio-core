@@ -1,8 +1,12 @@
 module Peatio::BlockchainClient
-  class Ethereum < Base
+  class Ethereum
+
+    include Helpers
 
     TOKEN_EVENT_IDENTIFIER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
     SUCCESS = '0x1'
+
+    attr_reader :blockchain
 
     def initialize(blockchain)
       @blockchain = blockchain
@@ -86,8 +90,12 @@ module Peatio::BlockchainClient
       json_rpc(:eth_getTransactionReceipt, [normalize_txid(txid)]).fetch('result')
     end
 
-    def convert_from_base_unit(value, currency)
-      value.to_d / currency.base_factor
+    def supports_cash_addr_format?
+      false
+    end
+
+    def case_sensitive?
+      true
     end
 
     protected
@@ -190,6 +198,14 @@ module Peatio::BlockchainClient
 
     def contract_address(currency)
       normalize_address(currency.erc20_contract_address)
+    end
+
+    def normalize_address(address)
+      case_sensitive? ? address : address.try(:downcase)
+    end
+
+    def normalize_txid(txid)
+      case_sensitive? ? txid : txid.try(:downcase)
     end
   end
 end

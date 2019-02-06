@@ -100,8 +100,12 @@ module Peatio::BlockchainService
       end
     end
 
+    def supports_cash_addr_format?
+      client.supports_cash_addr_format?
+    end
+
     def case_sensitive?
-      false
+      client.case_sensitive?
     end
 
     private
