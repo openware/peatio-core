@@ -1,11 +1,11 @@
 module Peatio::BlockchainClient
-  class Ethereum
+  class Ethereum < Base
 
     TOKEN_EVENT_IDENTIFIER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
     SUCCESS = '0x1'
 
-    def initialize(*)
-      super
+    def initialize(blockchain)
+      @blockchain = blockchain
       @json_rpc_call_id  = 0
       @json_rpc_endpoint = URI.parse(blockchain.server)
     end
@@ -93,13 +93,14 @@ module Peatio::BlockchainClient
     protected
 
     def connection
+      @connection ||=
       Faraday.new(@json_rpc_endpoint).tap do |connection|
         unless @json_rpc_endpoint.user.blank?
           connection.basic_auth(@json_rpc_endpoint.user, @json_rpc_endpoint.password)
         end
       end
     end
-    memoize :connection
+    # memoize :connection
 
     def json_rpc(method, params = [])
       response = connection.post \
