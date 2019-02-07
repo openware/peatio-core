@@ -1,5 +1,5 @@
 module Peatio::BlockchainService
-  class Base
+  class Abstract
     attr_reader :blockchain
 
     def initialize(cache:, blockchain:)
