@@ -37,10 +37,12 @@ module Peatio::BlockchainService
       method_not_implemented
     end
 
+    # TODO: Doc
     def supports_cash_addr_format?
       method_not_implemented
     end
 
+    # TODO: Doc
     def case_sensitive?
       method_not_implemented
     end
