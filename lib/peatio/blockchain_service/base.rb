@@ -32,6 +32,7 @@ module Peatio::BlockchainService
       method_not_implemented
     end
 
+    # TODO: Doc
     def client
       method_not_implemented
     end

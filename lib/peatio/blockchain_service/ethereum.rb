@@ -1,11 +1,13 @@
 module Peatio::BlockchainService
   class Ethereum < Base
 
-    include Helpers
-
     BlockGreaterThanLatestError = Class.new(StandardError)
     FetchBlockError = Class.new(StandardError)
     EmptyCurrentBlockError = Class.new(StandardError)
+
+    include Helpers
+
+    delegate :supports_cash_addr_format?, :case_sensitive?, to: :client
 
     def fetch_block!(block_number)
       raise BlockGreaterThanLatestError if block_number > latest_block_number
@@ -100,14 +102,6 @@ module Peatio::BlockchainService
           end
         end
       end
-    end
-
-    def supports_cash_addr_format?
-      client.supports_cash_addr_format?
-    end
-
-    def case_sensitive?
-      client.case_sensitive?
     end
 
     private
