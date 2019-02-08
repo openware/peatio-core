@@ -1,13 +1,17 @@
 module Peatio::BlockchainService
-  ADAPTERS = {}
 
   class << self
+    # TODO: Improve adapter methods.
     def register_adapter(name, klass)
-      ADAPTERS[name] = klass
+      adapters[name] = klass
     end
 
     def get_adapter(name)
-      ADAPTERS[name]
+      adapters[name]
+    end
+
+    def adapters
+      @adapters ||= {}
     end
   end
 end
