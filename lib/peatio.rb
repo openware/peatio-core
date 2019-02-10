@@ -23,4 +23,9 @@ module Peatio
   require_relative "peatio/blockchain_service/error"
   require_relative "peatio/blockchain_service/helpers"
   require_relative "peatio/blockchain_service"
+  require_relative "peatio/wallet_client/helpers"
+  require_relative "peatio/wallet_service/abstract"
+  require_relative "peatio/wallet_service/error"
+  require_relative "peatio/wallet_service/helpers"
+  require_relative "peatio/wallet_service"
 end
