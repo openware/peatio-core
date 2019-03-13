@@ -1,9 +1,12 @@
 module Peatio::Command::AMQP
   class Root < Peatio::Command::Base
 
-    def execute
-      say "Nothing here"
+    class Inspector < Peatio::Command::Base
+      def execute
+        Peatio::MQ::Inspector.new.run!
+      end
     end
 
+    subcommand "inspector", "Inspect  events in mq", Inspector
   end
 end

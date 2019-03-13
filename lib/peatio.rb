@@ -13,6 +13,7 @@ module Peatio
   require_relative "peatio/sql/schema"
   require_relative "peatio/mq/client"
   require_relative "peatio/mq/events"
+  require_relative "peatio/mq/inspector"
   require_relative "peatio/ranger"
   require_relative "peatio/injectors/peatio_events"
   require_relative "peatio/security/key_generator"
