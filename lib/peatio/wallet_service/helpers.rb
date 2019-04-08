@@ -2,6 +2,7 @@ module Peatio
   module WalletService
     module Helpers
 
+      # TODO: Split into two separate methods.
       def spread_deposit(deposit)
         left_amount = deposit.amount
         collection_spread = Hash.new(0)
@@ -40,6 +41,7 @@ module Peatio
         collection_spread
       end
 
+      # TODO: Get rid of this method.
       def destination_wallets(deposit)
         Wallet
           .active

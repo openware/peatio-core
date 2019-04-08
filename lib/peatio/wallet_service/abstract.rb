@@ -6,17 +6,21 @@ module Peatio
       end
 
       def create_address!(options = {})
-        method_not_implemented
+        abstract_method
       end
 
       def collect_deposit!(deposit, options = {})
-        method_not_implemented
+        abstract_method
       end
 
       def build_withdrawal!(withdraw, options = {})
-        method_not_implemented
+        abstract_method
       end
 
+      private
+      def abstract_method
+        method_not_implemented
+      end
     end
   end
 end
