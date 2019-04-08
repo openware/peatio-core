@@ -21,4 +21,5 @@ module Peatio
   require_relative "peatio/auth/jwt_authenticator"
   require_relative "peatio/blockchain_service"
   require_relative "peatio/blockchain_service/abstract"
+  require_relative "peatio/blockchain_client"
 end
