@@ -22,5 +22,11 @@ module Peatio
         @adapters = h
       end
     end
+
+    module Helpers
+      def cache_key(*suffixes)
+        [self.class.name.underscore.gsub("/", ":"), suffixes].join(":")
+      end
+    end
   end
 end
