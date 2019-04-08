@@ -10,41 +10,46 @@ module Peatio
 
       # TODO: Doc
       def fetch_block!(block_number)
-        method_not_implemented
+        abstract_method
       end
 
       # TODO: Doc
       def filtered_deposits(payment_addresses, &block)
-        method_not_implemented
+        abstract_method
       end
 
       # TODO: Doc
       def filtered_withdrawals(withdrawals, &block)
-        method_not_implemented
+        abstract_method
       end
 
       # TODO: Doc
       def current_block_number
-        method_not_implemented
+        abstract_method
       end
 
       # TODO: Doc
       def latest_block_number
-        method_not_implemented
+        abstract_method
       end
 
       # TODO: Doc
       def client
-        method_not_implemented
+        abstract_method
       end
 
       # TODO: Doc
       def supports_cash_addr_format?
-        method_not_implemented
+        abstract_method
       end
 
       # TODO: Doc
       def case_sensitive?
+        abstract_method
+      end
+
+      private
+      def abstract_method
         method_not_implemented
       end
     end
