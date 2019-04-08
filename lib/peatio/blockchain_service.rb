@@ -6,12 +6,13 @@ module Peatio
 
     class << self
       def register_adapter(name, klass)
+        name = name.to_sym
         raise DuplicatedAdapterError if adapters.key?(name)
-        adapters[name.to_sym] = klass
+        adapters[name] = klass
       end
 
       def adapter_for(name)
-        adapters.fetch(name) { raise NotRegisteredAdapterError }
+        adapters.fetch(name.to_sym) { raise NotRegisteredAdapterError }
       end
 
       def adapters
