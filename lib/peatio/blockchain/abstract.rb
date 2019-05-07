@@ -25,7 +25,7 @@ module Peatio #:nodoc:
     #   end
     #
     #   # Register MyBlockchain as peatio plugable blockchain.
-    #   Peatio::BlockchainAPI[:my_blockchain] = MyBlockchain.new
+    #   Peatio::Blockchain.registry[:my_blockchain] = MyBlockchain.new
     #
     # @author
     #   Yaroslav Savchuk <savchukyarpolk@gmail.com> (https://github.com/ysv)
@@ -87,7 +87,7 @@ module Peatio #:nodoc:
       #
       #   # Register MyBlockchain as peatio plugable blockchain.
       #   custom_features = {cash_addr_format: true}
-      #   Peatio::BlockchainAPI[:my_blockchain] = MyBlockchain.new(custom_features)
+      #   Peatio::Blockchain.registry[:my_blockchain] = MyBlockchain.new(custom_features)
       def initialize(*)
         abstract_method
       end

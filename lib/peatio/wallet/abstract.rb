@@ -21,7 +21,7 @@ module Peatio
     #   end
     #
     #   # Register MyWallet as peatio plugable wallet.
-    #   Peatio::WalletAPI[:my_wallet] = MyWallet.new
+    #   Peatio::Wallet.registry[:my_wallet] = MyWallet.new
     #
     # @author
     #   Yaroslav Savchuk <savchukyarpolk@gmail.com> (https://github.com/ysv)
@@ -56,7 +56,7 @@ module Peatio
       #
       #   # Register MyWallet as peatio plugable wallet.
       #   custom_features = {cash_addr_format: true}
-      #   Peatio::BlockchainAPI[:my_wallet] = MyWallet.new(custom_features)
+      #   Peatio::Wallet.registry[:my_wallet] = MyWallet.new(custom_features)
       def initialize(*)
         abstract_method
       end
