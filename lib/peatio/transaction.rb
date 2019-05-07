@@ -1,3 +1,6 @@
+require 'active_support/concern'
+require 'active_model'
+
 module Peatio
   class Transaction
     include ActiveModel::Model

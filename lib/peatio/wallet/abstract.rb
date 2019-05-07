@@ -1,9 +1,6 @@
-# TODO: Require in gem loading.
-require_relative 'error'
-
 module Peatio
   module Wallet
-    # @abstract Represents basic blockchain wallet interface.
+    # @abstract Represents basic wallet interface.
     #
     # Subclass and override abstract methods to implement
     # a peatio plugable wallet.
@@ -70,8 +67,9 @@ module Peatio
       # @option settings [Hash] :wallet Wallet settings for performing API calls.
       # With :address required key other settings could be customized
       # using Wallet#settings.
-      # @option settings [Hash] :currency Currency settings with
-      # :id,:base_factor,:options keys.
+      # @option settings [Array<Hash>] :currencies List of currency hashes
+      #   with :id,:base_factor,:options(deprecated) keys.
+      #   Custom keys could be added by defining them in Currency #options.
       #
       # @return [Hash] merged settings.
       def configure(settings = {})
@@ -83,7 +81,6 @@ module Peatio
       # @abstract
       #
       # @param [Hash] options
-      #
       # @options options [String] :uid User UID which requested address creation.
       #
       # @return [Hash] newly created blockchain address.
@@ -106,13 +103,16 @@ module Peatio
       # @param [Peatio::Transaction] transaction transaction with defined
       # to_address, amount & currency_id.
       #
-      # @options options [String] custon options for wallet client.
+      # @param [Hash] options
+      # @options options [String] :subtract_fee Defines if you need to subtract
+      #   fee from amount defined in transaction.
+      #   It means that you need to deduct fee from amount declared in
+      #   transaction and send only remaining amount.
+      #   If transaction amount is 1.0 and estimated fee
+      #   for sending transaction is 0.01 you need to send 0.09
+      #   so 1.0 (0.9 + 0.1) will be subtracted from wallet balance
       #
-      # @note You need to subtract fee from amount you send.
-      #       It means that you need to deduct fee from the declared in
-      #       transaction.
-      #       If transaction amount is 1.0 and estimated fee is 0.01
-      #       you need to send 0.09.
+      # @options options [String] custon options for wallet client.
       #
       # @return [Peatio::Transaction] transaction with updated hash.
       #

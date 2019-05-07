@@ -1,9 +1,3 @@
-# encoding: UTF-8
-# frozen_string_literal: true
-
-# TODO: Require in gem loading.
-require_relative 'error'
-
 module Peatio #:nodoc:
   module Blockchain #:nodoc:
 
@@ -13,7 +7,8 @@ module Peatio #:nodoc:
     # a peatio plugable blockchain.
     # Than you need to register your blockchain implementation.
     #
-    # @see Bitcoin::Blockchain Bitcoin as example of Abstract imlementation.
+    # @see Bitcoin::Blockchain Bitcoin as example of Abstract imlementation
+    #     (inside peatio source https://github.com/rubykube/peatio).
     #
     # @example
     #
@@ -101,7 +96,8 @@ module Peatio #:nodoc:
       #
       # @option settings [String] :server Public blockchain API endpoint.
       # @option settings [Array<Hash>] :currencies List of currency hashes
-      #   with :id,:base_factor,:options keys.
+      #   with :id,:base_factor,:options(deprecated) keys.
+      #   Custom keys could be added by defining them in Currency #options.
       #
       # @return [Hash] merged settings.
       def configure(settings = {})
