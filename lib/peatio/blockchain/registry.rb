@@ -1,7 +1,10 @@
-require 'peatio/adapter_registry'
+require "peatio/adapter_registry"
 
 module Peatio
   module Blockchain
+
+    VERSION = "1.0".freeze
+
     class << self
       def registry
         @registry ||= Registry.new
