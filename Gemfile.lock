@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     peatio (0.4.5)
+      activemodel (~> 5.2.3)
       amqp
       bunny
       clamp
@@ -13,6 +14,13 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    activemodel (5.2.3)
+      activesupport (= 5.2.3)
+    activesupport (5.2.3)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (>= 0.7, < 2)
+      minitest (~> 5.1)
+      tzinfo (~> 1.1)
     amq-protocol (2.3.0)
     amqp (1.8.0)
       amq-protocol (>= 2.2.0)
@@ -24,6 +32,7 @@ GEM
     bunny-mock (1.7.0)
       bunny (>= 1.7)
     clamp (1.3.0)
+    concurrent-ruby (1.1.5)
     diff-lcs (1.3)
     docile (1.3.1)
     em-spec (0.2.7)
@@ -36,9 +45,12 @@ GEM
       websocket
     eventmachine (1.2.7)
     http_parser.rb (0.6.0)
+    i18n (1.6.0)
+      concurrent-ruby (~> 1.0)
     jaro_winkler (1.5.1)
     json (2.1.0)
     jwt (2.1.0)
+    minitest (5.11.3)
     mysql2 (0.5.2)
     parallel (1.12.1)
     parser (2.5.1.2)
@@ -80,6 +92,9 @@ GEM
     simplecov-json (0.2)
       json
       simplecov
+    thread_safe (0.3.6)
+    tzinfo (1.2.5)
+      thread_safe (~> 0.1)
     unicode-display_width (1.4.0)
     websocket (1.2.8)
 
