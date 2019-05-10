@@ -1,18 +1,74 @@
 require 'active_support/concern'
 require 'active_model'
 
-module Peatio
+module Peatio #:nodoc:
+
+  # This class represents blockchain transaction.
+  #
+  # Using the instant of this class the peatio application will send/recieve
+  # income/outcome transactions from a peatio pluggable blockchain.
+  #
+  # @example
+  #
+  #   Peatio::Transaction.new(
+  #     {
+  #       hash: '0x5d0ef9697a2f3ea561c9fbefb48e380a4cf3d26ad2be253177c472fdd0e8b486',
+  #       txout: 1,
+  #       to_address: '0x9af4f143cd5ecfba0fcdd863c5ef52d5ccb4f3e5',
+  #       amount: 0.01,
+  #       block_number: 7732274,
+  #       currency_id: 'eth',
+  #       status: 'success'
+  #     }
+  #   )
+  #
+  # @author
+  #   Maksym Naichuk <naichuk.maks@gmail.com> (https://github.com/mnaichuk)
   class Transaction
     include ActiveModel::Model
 
-    STATUSES = %i[success pending fail].freeze
+    # List of statuses supported by peatio.
+    #
+    # @note Statuses list:
+    #
+    #   pending - the transaction is unconfirmed in the blockchain.
+    #
+    #   success - the transaction is a successfull,
+    #   the transaction amount has been successfully transferred
+    #
+    #   failed - the transaction is failed in the blockchain.
 
-    attr_accessor :hash, :txout,
-                  :to_address,
-                  :amount,
-                  :block_number,
-                  :currency_id
+    STATUSES = %i[success pending failed].freeze
 
+    # @!attribute [rw] hash
+    # return [String] transaction hash
+    attr_accessor :hash
+
+    # @!attribute [rw] txout
+    # return [Integer] transaction number in send-to-many request
+    attr_accessor :txout
+
+    # @!attribute [rw] to_address
+    # return [String] transaction recepient address
+    attr_accessor :to_address
+
+    # @!attribute [rw] amount
+    # return [Decimal] amount of the transaction
+    attr_accessor :amount
+
+    # @!attribute [rw] block_number
+    # return [Integer] transaction block number
+    attr_accessor :block_number
+
+    # @!attribute [rw] currency_id
+    # return [String] transaction currency id
+    attr_accessor :currency_id
+
+    # @!attribute [w] status
+    #
+    # @see Peatio::Transaction::STATUSES for list of statuses by peatio
+    #
+    # return [String] transaction status
     attr_writer :status
 
     validates :hash, :txout,
@@ -31,9 +87,16 @@ module Peatio
 
     validates :status, inclusion: { in: STATUSES }
 
-    # TODO: rewrite this method
+    # Status for specific transaction.
+    #
+    # @!method status
+    #
+    # @example
+    #
+    #   status.failed? # true if transaction status 'failed'
+    #   status.success? # true if transaction status 'success'
     def status
-      @status.to_sym
+      @status&.inquiry
     end
   end
 end
