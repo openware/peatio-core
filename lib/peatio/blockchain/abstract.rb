@@ -5,7 +5,7 @@ module Peatio #:nodoc:
     #
     # Subclass and override abstract methods to implement
     # a peatio plugable blockchain.
-    # Than you need to register your blockchain implementation.
+    # Then you need to register your blockchain implementation.
     #
     # @see Bitcoin::Blockchain Bitcoin as example of Abstract imlementation
     #     (inside peatio source https://github.com/rubykube/peatio).
