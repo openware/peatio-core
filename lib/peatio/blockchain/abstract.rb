@@ -100,6 +100,10 @@ module Peatio #:nodoc:
       #   Custom keys could be added by defining them in Currency #options.
       #
       # @return [Hash] merged settings.
+      #
+      # @note Be careful with your blockchain state after configure.
+      #       Clean everything what could be related to other blockchain configuration.
+      #       E.g. client state.
       def configure(settings = {})
         abstract_method
       end
