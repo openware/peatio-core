@@ -72,6 +72,10 @@ module Peatio
       #   Custom keys could be added by defining them in Currency #options.
       #
       # @return [Hash] merged settings.
+      #
+      # @note Be careful with your wallet state after configure.
+      #       Clean everything what could be related to other wallet configuration.
+      #       E.g. client state.
       def configure(settings = {})
         abstract_method
       end
