@@ -38,7 +38,7 @@ module Peatio #:nodoc:
     #
     #   failed - the transaction is failed in the blockchain.
 
-    STATUSES = %i[success pending failed].freeze
+    STATUSES = %w[success pending failed].freeze
 
     # @!attribute [rw] hash
     # return [String] transaction hash
@@ -96,7 +96,7 @@ module Peatio #:nodoc:
     #   status.failed? # true if transaction status 'failed'
     #   status.success? # true if transaction status 'success'
     def status
-      @status&.inquiry
+      @status&.to_s&.inquiry
     end
   end
 end
