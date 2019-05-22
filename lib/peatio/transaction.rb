@@ -1,4 +1,6 @@
 require 'active_support/concern'
+require 'active_support/core_ext/string/inquiry'
+require 'active_support/core_ext/object/blank'
 require 'active_model'
 
 module Peatio #:nodoc:
@@ -31,7 +33,8 @@ module Peatio #:nodoc:
     #
     # @note Statuses list:
     #
-    #   pending - the transaction is unconfirmed in the blockchain.
+    #   pending - the transaction is unconfirmed in the blockchain or
+    #   wasn't created yet.
     #
     #   success - the transaction is a successfull,
     #   the transaction amount has been successfully transferred
@@ -39,6 +42,8 @@ module Peatio #:nodoc:
     #   failed - the transaction is failed in the blockchain.
 
     STATUSES = %w[success pending failed].freeze
+
+    DEFAULT_STATUS = 'pending'.freeze
 
     # @!attribute [rw] hash
     # return [String] transaction hash
@@ -64,20 +69,18 @@ module Peatio #:nodoc:
     # return [String] transaction currency id
     attr_accessor :currency_id
 
-    # @!attribute [w] status
-    #
-    # @see Peatio::Transaction::STATUSES for list of statuses by peatio
-    #
-    # return [String] transaction status
-    attr_writer :status
-
-    validates :hash, :txout,
-              :to_address,
+    validates :to_address,
               :amount,
-              :block_number,
               :currency_id,
               :status,
               presence: true
+
+    validates :hash,
+              :block_number,
+              presence: { if: -> (t){ t.status.failed? || t.status.success? } }
+
+    validates :txout,
+              presence: { if: -> (t){ t.status.success? } }
 
     validates :block_number,
               numericality: { greater_than_or_equal_to: 0, only_integer: true }
@@ -86,6 +89,11 @@ module Peatio #:nodoc:
               numericality: { greater_than_or_equal_to: 0 }
 
     validates :status, inclusion: { in: STATUSES }
+
+    def initialize(attributes={})
+      super
+      @status = @status.present? ? @status.to_s : DEFAULT_STATUS
+    end
 
     # Status for specific transaction.
     #
@@ -96,7 +104,11 @@ module Peatio #:nodoc:
     #   status.failed? # true if transaction status 'failed'
     #   status.success? # true if transaction status 'success'
     def status
-      @status&.to_s&.inquiry
+      @status&.inquiry
+    end
+
+    def status=(s)
+      @status = s.to_s
     end
   end
 end
