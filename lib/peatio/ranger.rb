@@ -85,7 +85,7 @@ module Peatio::Ranger
     end
   end
 
-  def self.run!(jwt_public_key)
+  def self.run!(jwt_public_key, exchange_name)
     host = ENV["RANGER_HOST"] || "0.0.0.0"
     port = ENV["RANGER_PORT"] || "8081"
 
@@ -98,8 +98,7 @@ module Peatio::Ranger
       Peatio::MQ::Client.new
       Peatio::MQ::Client.connect!
       Peatio::MQ::Client.create_channel!
-
-      Peatio::MQ::Events.subscribe!
+      Peatio::MQ::Events.subscribe!(exchange_name)
 
       EM::WebSocket.start(
         host: host,
