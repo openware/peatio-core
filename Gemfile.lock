@@ -28,8 +28,8 @@ GEM
       eventmachine
     ast (2.4.0)
     bump (0.6.1)
-    bunny (2.11.0)
-      amq-protocol (~> 2.3.0)
+    bunny (2.14.3)
+      amq-protocol (~> 2.3, >= 2.3.0)
     bunny-mock (1.7.0)
       bunny (>= 1.7)
     byebug (11.0.1)

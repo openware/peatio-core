@@ -1,4 +1,4 @@
-require 'base64'
+# frozen_string_literal: true
 
 module Peatio::Command
   class Security < Peatio::Command::Base
@@ -17,9 +17,8 @@ module Peatio::Command
           begin
             keypair.save(path)
             puts "Files saved in #{File.join(path, 'rsa-key')}"
-
           rescue IOError => e
-            abort('Failed saving files')	
+            abort("Failed saving files")
           end
         end
       end

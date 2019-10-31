@@ -5,10 +5,11 @@ module Peatio::Ranger
     attr_reader :connections
     attr_reader :connections_by_userid
     attr_reader :streams_sockets
+    attr_reader :logger
 
     class ConnectionArray < Array
       def delete(connection)
-        self.delete_if do |c|
+        delete_if do |c|
           c.id == connection.id
         end
       end
@@ -18,6 +19,26 @@ module Peatio::Ranger
       @connections = {}
       @connections_by_userid = {}
       @streams_sockets = {}
+      @logger = Peatio::Logger.logger
+    end
+
+    def stats
+      [
+        "==== Stats ====",
+        "Connections: %d" % [@connections.size],
+        "Authenticated connections: %d" % [@connections_by_userid.each_value.map(&:size).reduce(:+) || 0],
+        "Streams subscriptions: %d" % [@streams_sockets.each_value.map(&:size).reduce(:+) || 0],
+        "Streams kind: %d" % [@streams_sockets.size],
+      ].join("\n")
+    end
+
+    def debug
+      [
+        "==== Debug ====",
+        "connections: %s" % [@connections.inspect],
+        "connections_by_userid: %s" % [@connections_by_userid],
+        "streams_sockets: %s" % [@streams_sockets],
+      ].join("\n")
     end
 
     def on_connection_open(connection)
@@ -30,8 +51,7 @@ module Peatio::Ranger
 
     def on_connection_close(connection)
       @connections.delete(connection.id)
-
-      connection.streams.each do |stream|
+      connection.streams.keys.each do |stream|
         on_unsubscribe(connection, stream)
       end
       return unless connection.authorized
@@ -62,7 +82,7 @@ module Peatio::Ranger
     def on_message(delivery_info, _metadata, payload)
       routing_key = delivery_info.routing_key
       if routing_key.count(".") != 2
-        Peatio::Logger.error { "invalid routing key from amqp: #{routing_key}" }
+        logger.error { "invalid routing key from amqp: #{routing_key}" }
         return
       end
 

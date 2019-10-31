@@ -3,10 +3,22 @@
 describe Peatio::Ranger::Router do
   let(:router) { Peatio::Ranger::Router.new() }
 
-  let(:anonymous1) { OpenStruct.new(authorized: false, user: nil, id: 1, streams: []) }
-  let(:anonymous2) { OpenStruct.new(authorized: false, user: nil, id: 2, streams: []) }
-  let(:user1) { OpenStruct.new(authorized: true, user: "user1", id: 3, streams: []) }
-  let(:user2) { OpenStruct.new(authorized: true, user: "user2", id: 4, streams: []) }
+  let(:anonymous1) { OpenStruct.new(authorized: false, user: nil, id: 1, streams: {}) }
+  let(:anonymous2) { OpenStruct.new(authorized: false, user: nil, id: 2, streams: {}) }
+  let(:user1) { OpenStruct.new(authorized: true, user: "user1", id: 3, streams: {}) }
+  let(:user2) { OpenStruct.new(authorized: true, user: "user2", id: 4, streams: {}) }
+
+  context "no connection" do
+    it "shows empty stats" do
+      expect(router.stats).to eq(
+        "==== Stats ====\n" \
+        "Connections: 0\n" \
+        "Authenticated connections: 0\n" \
+        "Streams subscriptions: 0\n" \
+        "Streams kind: 0"
+      )
+    end
+  end
 
   context "unauthorized users" do
     it "registers connections and subscribed streams" do
@@ -36,8 +48,8 @@ describe Peatio::Ranger::Router do
       )
 
       # users disconnect
-      anonymous1.streams = %w[some-feed]
-      anonymous2.streams = %w[some-feed another-feed]
+      anonymous1.streams = {"some-feed" => true}
+      anonymous2.streams = {"some-feed" => true, "another-feed" => true}
       router.on_connection_close(anonymous1)
       router.on_connection_close(anonymous2)
       expect(router.connections).to eq({})
@@ -69,6 +81,13 @@ describe Peatio::Ranger::Router do
       expect(router.streams_sockets).to eq(
         "some-feed"    => [anonymous1, anonymous2],
         "another-feed" => [anonymous2]
+      )
+      expect(router.stats).to eq(
+        "==== Stats ====\n" \
+        "Connections: 2\n" \
+        "Authenticated connections: 0\n" \
+        "Streams subscriptions: 3\n" \
+        "Streams kind: 2"
       )
 
       # users unsubscribe

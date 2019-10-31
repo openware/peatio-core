@@ -14,11 +14,14 @@ module Peatio::Ranger
     router = Peatio::Ranger::Router.new
     client.subscribe(exchange_name, &router.method(:on_message))
 
-    EM::WebSocket.start(
-      host:   host,
-      port:   port,
-      secure: false
-    ) do |socket|
+    if opts[:display_stats]
+      EM.add_periodic_timer(opts[:stats_period]) do
+        Peatio::Logger.logger.info { router.stats }
+        Peatio::Logger.logger.debug { router.debug }
+      end
+    end
+
+    EM::WebSocket.start(host: host, port: port, secure: false) do |socket|
       connection = Peatio::Ranger::Connection.new(router, socket, logger)
       socket.onopen do |hs|
         connection.handshake(authenticator, hs)

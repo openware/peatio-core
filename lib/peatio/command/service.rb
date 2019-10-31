@@ -4,6 +4,8 @@ module Peatio::Command::Service
   class Start < Peatio::Command::Base
     class Ranger < Peatio::Command::Base
       option ["-e", "--exchange"], "NAME", "exchange name to inject messages to", default: "peatio.events.ranger"
+      option "--[no-]stats", :flag, "display periodically connections statistics", default: true
+      option "--stats-period", "SECONDS", "period of displaying stats in seconds", default: 30
       def execute
         raise ArgumentError, "JWT_PUBLIC_KEY was not specified." if ENV["JWT_PUBLIC_KEY"].to_s.empty?
 
@@ -14,7 +16,13 @@ module Peatio::Command::Service
           raise ArgumentError, "JWT_PUBLIC_KEY was set to private key, however it should be public."
         end
 
-        ::Peatio::Ranger.run!(jwt_public_key, exchange)
+        raise "stats period missing" if stats? && !stats_period
+
+        opts = {
+          display_stats: stats?,
+          stats_period:  stats_period.to_f,
+        }
+        ::Peatio::Ranger.run!(jwt_public_key, exchange, opts)
       end
     end
 
