@@ -15,6 +15,8 @@ describe Peatio::Ranger do
   let(:auth) {
     Peatio::Auth::JWTAuthenticator.new(jwt_public_key, jwt_private_key)
   }
+  let(:router) { Peatio::Ranger::Router.new }
+  let(:ex_name) { "peatio.events.ranger" }
 
   let(:logger) {
     Peatio::Logger.logger
@@ -51,20 +53,16 @@ describe Peatio::Ranger do
   include EM::SpecHelper
 
   context "invalid token" do
-    before do
-      Peatio::MQ::Client.new
-      Peatio::MQ::Client.connection = BunnyMock.new.start
-      Peatio::MQ::Client.create_channel!
-    end
+    let!(:client) { Peatio::MQ::Client.new }
 
     it "denies access" do
       em {
         EM.add_timer(1) { fail "timeout" }
 
         ws_server do |socket|
-          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
+          connection = Peatio::Ranger::Connection.new(router, socket, logger)
           socket.onopen do |handshake|
-            connection.handshake(handshake)
+            connection.handshake(auth, handshake)
           end
           socket.onmessage do |msg|
             connection.handle(msg)
@@ -86,20 +84,16 @@ describe Peatio::Ranger do
   end
 
   context "valid token" do
-    before do
-      Peatio::MQ::Client.new
-      Peatio::MQ::Client.connection = BunnyMock.new.start
-      Peatio::MQ::Client.create_channel!
-    end
+    let!(:client) { Peatio::MQ::Client.new }
 
     it "allows access" do
       em {
         EM.add_timer(1) { fail "timeout" }
         ws_server do |socket|
-          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
+          connection = Peatio::Ranger::Connection.new(router, socket, logger)
 
           socket.onopen do |handshake|
-            connection.handshake(handshake)
+            connection.handshake(auth, handshake)
           end
 
           socket.onerror do |e|
@@ -126,47 +120,31 @@ describe Peatio::Ranger do
   end
 
   context "valid token" do
-    before do
-      Peatio::MQ::Client.new
-      Peatio::MQ::Client.connection = BunnyMock.new.start
-      Peatio::MQ::Client.create_channel!
-
-      Peatio::MQ::Events.subscribe!
-    end
+    let!(:client) { Peatio::MQ::Client.new }
 
     it "sends messages that belong to the user and filtered by stream" do
       em {
         EM.add_timer(1) { fail "timeout" }
 
-        ws_server do |socket|
-          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
-
-          socket.onopen do |handshake|
-            connection.handshake(handshake)
-          end
-
-          socket.onmessage do |msg|
-            connection.handle(msg)
-          end
-        end
+        Peatio::Ranger.run(jwt_public_key, ex_name, ranger_port: 88888)
 
         EM.add_timer(0.1) do
           wsc = ws_connect("/?stream=stream_1&stream=stream_2", { "Authorization" => "Bearer #{valid_token}" })
 
           wsc.callback {
-            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_1", {
+            client.publish(ex_name, "private", valid_token_payload[:uid], "stream_1", {
               key: "stream_1_user_1",
             })
-            Peatio::MQ::Events.publish("private", "SOMEUSER2", "stream_1", {
+            client.publish(ex_name, "private", "SOMEUSER2", "stream_1", {
               key: "stream_1_user_2",
             })
-            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
+            client.publish(ex_name, "private", valid_token_payload[:uid], "stream_2", {
               key: "stream_2_user_1",
             })
-            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_3", {
+            client.publish(ex_name, "private", valid_token_payload[:uid], "stream_3", {
               key: "stream_3_user_1",
             })
-            Peatio::MQ::Events.publish("private", valid_token_payload[:uid], "stream_2", {
+            client.publish(ex_name, "private", valid_token_payload[:uid], "stream_2", {
               key: "stream_2_user_1_message_2",
             })
           }
@@ -193,35 +171,26 @@ describe Peatio::Ranger do
     it "sends public messages filtered by stream" do
       em {
         EM.add_timer(1) { fail "timeout" }
-        ws_server do |socket|
-          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
-          socket.onopen do |handshake|
-            connection.handshake(handshake)
-          end
-
-          socket.onmessage do |msg|
-            connection.handle(msg)
-          end
-        end
+        Peatio::Ranger.run(jwt_public_key, ex_name, ranger_port: 88888)
 
         EM.add_timer(0.1) do
           ws_client = ws_connect("/?stream=btcusd.order")
 
           ws_client.callback {
-            Peatio::MQ::Events.publish("public", "btcusd", "order", {
+            client.publish(ex_name, "public", "btcusd", "order", {
               key: "btcusd_order_1",
             })
-            Peatio::MQ::Events.publish("public", "btcusd", "order", {
+            client.publish(ex_name, "public", "btcusd", "order", {
               key: "btcusd_order_2",
             })
-            Peatio::MQ::Events.publish("public", "btcusd", "trade", {
+            client.publish(ex_name, "public", "btcusd", "trade", {
               key: "btcusd_trade_2",
             })
-            Peatio::MQ::Events.publish("public", "ethusd", "order", {
+            client.publish(ex_name, "public", "ethusd", "order", {
               key: "ethusd_order_1",
             })
-            Peatio::MQ::Events.publish("public", "btcusd", "order", {
+            client.publish(ex_name, "public", "btcusd", "order", {
               key: "btcusd_order_3",
             })
           }
@@ -249,17 +218,8 @@ describe Peatio::Ranger do
     it "subscribes to streams dynamically and receive public messages filtered by stream" do
       em {
         EM.add_timer(1) { fail "timeout" }
-        ws_server do |socket|
-          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
-          socket.onopen do |handshake|
-            connection.handshake(handshake)
-          end
-
-          socket.onmessage do |msg|
-            connection.handle(msg)
-          end
-        end
+        Peatio::Ranger.run(jwt_public_key, ex_name, ranger_port: 88888)
 
         EM.add_timer(0.1) do
           ws_client = ws_connect("/")
@@ -268,19 +228,19 @@ describe Peatio::Ranger do
             ws_client.send_msg(JSON.dump({event: "subscribe", streams: ["btcusd.order"]}))
 
             EM.add_timer(0.1) do
-              Peatio::MQ::Events.publish("public", "btcusd", "order", {
+              client.publish(ex_name, "public", "btcusd", "order", {
                 key: "btcusd_order_1",
               })
-              Peatio::MQ::Events.publish("public", "btcusd", "order", {
+              client.publish(ex_name, "public", "btcusd", "order", {
                 key: "btcusd_order_2",
               })
-              Peatio::MQ::Events.publish("public", "btcusd", "trade", {
+              client.publish(ex_name, "public", "btcusd", "trade", {
                 key: "btcusd_trade_2",
               })
-              Peatio::MQ::Events.publish("public", "ethusd", "order", {
+              client.publish(ex_name, "public", "ethusd", "order", {
                 key: "ethusd_order_1",
               })
-              Peatio::MQ::Events.publish("public", "btcusd", "order", {
+              client.publish(ex_name, "public", "btcusd", "order", {
                 key: "btcusd_order_3",
               })
             end
@@ -314,17 +274,8 @@ describe Peatio::Ranger do
     it "unsubscribe a stream stop receiving message for this stream" do
       em {
         EM.add_timer(1) { fail "timeout" }
-        ws_server do |socket|
-          connection = Peatio::Ranger::Connection.new(auth, socket, logger)
 
-          socket.onopen do |handshake|
-            connection.handshake(handshake)
-          end
-
-          socket.onmessage do |msg|
-            connection.handle(msg)
-          end
-        end
+        Peatio::Ranger.run(jwt_public_key, ex_name, ranger_port: 88888)
 
         EM.add_timer(0.1) do
           ws_client = ws_connect("/?stream=btcusd.order")
@@ -334,19 +285,19 @@ describe Peatio::Ranger do
               ws_client.send_msg(JSON.dump({event: "unsubscribe", streams: ["btcusd.order"]}))
 
               EM.add_timer(0.1) do
-                Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                client.publish(ex_name, "public", "btcusd", "order", {
                   key: "btcusd_order_1",
                 })
-                Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                client.publish(ex_name, "public", "btcusd", "order", {
                   key: "btcusd_order_2",
                 })
-                Peatio::MQ::Events.publish("public", "btcusd", "trade", {
+                client.publish(ex_name, "public", "btcusd", "trade", {
                   key: "btcusd_trade_2",
                 })
-                Peatio::MQ::Events.publish("public", "ethusd", "order", {
+                client.publish(ex_name, "public", "ethusd", "order", {
                   key: "ethusd_order_1",
                 })
-                Peatio::MQ::Events.publish("public", "btcusd", "order", {
+                client.publish(ex_name, "public", "btcusd", "order", {
                   key: "btcusd_order_3",
                 })
 

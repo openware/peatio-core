@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio
   class Logger
     class << self
@@ -9,27 +11,27 @@ module Peatio
         (ENV["LOG_LEVEL"] || "debug").downcase.to_sym
       end
 
-      def debug(progname = nil, &block)
+      def debug(progname=nil, &block)
         logger.debug(progname, &block)
       end
 
-      def info(progname = nil, &block)
+      def info(progname=nil, &block)
         logger.info(progname, &block)
       end
 
-      def warn(progname = nil, &block)
+      def warn(progname=nil, &block)
         logger.warn(progname, &block)
       end
 
-      def error(progname = nil, &block)
+      def error(progname=nil, &block)
         logger.error(progname, &block)
       end
 
-      def fatal(progname = nil, &block)
+      def fatal(progname=nil, &block)
         logger.fatal(progname, &block)
       end
 
-      def unknown(progname = nil, &block)
+      def unknown(progname=nil, &block)
         logger.unknown(progname, &block)
       end
     end

@@ -1,11 +1,11 @@
+# frozen_string_literal: true
+
 module Peatio::Command::Service
   class Start < Peatio::Command::Base
     class Ranger < Peatio::Command::Base
       option ["-e", "--exchange"], "NAME", "exchange name to inject messages to", default: "peatio.events.ranger"
       def execute
-        if ENV["JWT_PUBLIC_KEY"].nil?
-          raise ArgumentError, "JWT_PUBLIC_KEY was not specified."
-        end
+        raise ArgumentError, "JWT_PUBLIC_KEY was not specified." if ENV["JWT_PUBLIC_KEY"].to_s.empty?
 
         key_decoded = Base64.urlsafe_decode64(ENV["JWT_PUBLIC_KEY"])
 
