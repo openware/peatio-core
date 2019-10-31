@@ -13,3 +13,4 @@
 
 # Ignore RubyMine files
 .idea
+/secrets
