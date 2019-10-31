@@ -14,6 +14,14 @@ module Peatio::Ranger
       @streams = {}
     end
 
+    def inspect
+      if authorized
+        "<Connection id=#{id} user=#{user}>"
+      else
+        "<Connection id=#{id}>"
+      end
+    end
+
     def send_raw(payload)
       logger.debug { "sending to user #{user.inspect} payload: #{payload}" }
       @socket.send(payload)
@@ -67,8 +75,9 @@ module Peatio::Ranger
     end
 
     def handle(msg)
-      data = JSON.parse(msg)
+      return if msg.to_s.empty?
 
+      data = JSON.parse(msg)
       case data["event"]
       when "subscribe"
         subscribe(data["streams"])

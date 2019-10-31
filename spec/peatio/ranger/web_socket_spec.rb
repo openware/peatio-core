@@ -2,6 +2,10 @@ require "em-spec/rspec"
 require "bunny-mock"
 
 describe Peatio::Ranger do
+  before(:all) do
+    Peatio::MQ::Client.connection = BunnyMock.new.start
+  end
+
   let(:logger) { Peatio::Logger }
 
   let(:jwt_private_key) {

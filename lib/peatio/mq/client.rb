@@ -3,7 +3,7 @@
 module Peatio::MQ
   class Client
     class << self
-      attr_reader :connection
+      attr_accessor :connection
 
       def connect!
         options = {
@@ -22,13 +22,13 @@ module Peatio::MQ
     end
 
     def initialize
-      Client.connect! unless @connection
+      Client.connect! unless Peatio::MQ::Client.connection
       @channel = Client.connection.create_channel
       @exchanges = {}
     end
 
     def exchange(name, type="topic")
-      @exchanges[name] ||= Bunny::Exchange.new(@channel, type, name)
+      @exchanges[name] ||= @channel.exchange(name, type: type)
     end
 
     def publish(ex_name, type, id, event, payload)
