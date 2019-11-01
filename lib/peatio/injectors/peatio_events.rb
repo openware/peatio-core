@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Injectors
   class PeatioEvents
     attr_accessor :market, :market_name, :base_unit, :quote_unit, :seller_uid, :buyer_uid, :logger
@@ -22,7 +24,7 @@ module Peatio::Injectors
       if message = @messages.shift
         type, id, event, data = message
         client.publish(exchange_name, type, id, event, data)
-        EM::next_tick do
+        EM.next_tick do
           inject_message(client, exchange_name)
         end
       else
@@ -39,6 +41,10 @@ module Peatio::Injectors
         private_trade_user1,
         private_trade_user2,
         public_trade,
+        public_orderbook_increment1,
+        public_orderbook_snapshot1,
+        public_orderbook_increment2,
+        public_orderbook_increment3,
       ]
     end
 
@@ -50,8 +56,8 @@ module Peatio::Injectors
       Time.now
     end
 
-    alias :completed_at :updated_at
-    alias :canceled_at :updated_at
+    alias completed_at updated_at
+    alias canceled_at updated_at
 
     def public_orderbook
       [
@@ -60,15 +66,74 @@ module Peatio::Injectors
         "update",
         {
           "asks": [
-            ["1020.0","0.005"],
-            ["1026.0","0.03"]
+            ["1020.0", "0.005"],
+            ["1026.0", "0.03"]
           ],
           "bids": [
-            ["1000.0","0.25"],
-            ["999.0","0.005"],
-            ["994.0","0.005"],
-            ["1.0","11.0"]
+            ["1000.0", "0.25"],
+            ["999.0", "0.005"],
+            ["994.0", "0.005"],
+            ["1.0", "11.0"]
           ]
+        }
+      ]
+    end
+
+    def public_orderbook_snapshot1
+      [
+        "public",
+        market,
+        "ob-snap",
+        {
+          "asks": [
+            ["1020.0", "0.005"],
+            ["1026.0", "0.03"]
+          ],
+          "bids": [
+            ["1000.0", "0.25"],
+            ["999.0", "0.005"],
+            ["994.0", "0.005"],
+            ["1.0", "11.0"]
+          ]
+        }
+      ]
+    end
+
+    def public_orderbook_increment1
+      [
+        "public",
+        market,
+        "ob-inc",
+        {
+          "asks": [
+            ["1020.0", "0.015"],
+          ],
+        }
+      ]
+    end
+
+    def public_orderbook_increment2
+      [
+        "public",
+        market,
+        "ob-inc",
+        {
+          "bids": [
+            ["1000.0", "0"],
+          ],
+        }
+      ]
+    end
+
+    def public_orderbook_increment3
+      [
+        "public",
+        market,
+        "ob-inc",
+        {
+          "bids": [
+            ["999.0", "0.001"],
+          ],
         }
       ]
     end
@@ -80,19 +145,19 @@ module Peatio::Injectors
         "tickers",
         {
           market => {
-            "name": market_name,
-            "base_unit": base_unit,
+            "name":       market_name,
+            "base_unit":  base_unit,
             "quote_unit": quote_unit,
-            "low": "1000.0",
-            "high": "10000.0",
-            "last": "1000.0",
-            "open": 1000.0,
-            "volume": "0.0",
-            "sell": "1020.0",
-            "buy": "1000.0",
-            "at": Time.now.to_i
-            }
+            "low":        "1000.0",
+            "high":       "10000.0",
+            "last":       "1000.0",
+            "open":       1000.0,
+            "volume":     "0.0",
+            "sell":       "1020.0",
+            "buy":        "1000.0",
+            "at":         Time.now.to_i
           }
+        }
       ]
     end
 
@@ -102,14 +167,14 @@ module Peatio::Injectors
         "IDABC0000001",
         "order",
         {
-          "id": 22,
-          "at": created_at.to_i,
-          "market": market,
-          "kind":"bid",
-          "price":"1026.0",
-          "state":"wait",
-          "volume":"0.001",
-          "origin_volume":"0.001"
+          "id":            22,
+          "at":            created_at.to_i,
+          "market":        market,
+          "kind":          "bid",
+          "price":         "1026.0",
+          "state":         "wait",
+          "volume":        "0.001",
+          "origin_volume": "0.001"
         }
       ]
     end
@@ -120,10 +185,10 @@ module Peatio::Injectors
         "IDABC0000001",
         "trade",
         {
-          "id": 7,
-          "kind": "ask",
-          "at": created_at.to_i,
-          "price": "1020.0",
+          "id":     7,
+          "kind":   "ask",
+          "at":     created_at.to_i,
+          "price":  "1020.0",
           "volume": "0.001",
           "ask_id": 15,
           "bid_id": 22,
@@ -138,10 +203,10 @@ module Peatio::Injectors
         "IDABC0000002",
         "trade",
         {
-          "id": 7,
-          "kind": "bid",
-          "at": created_at.to_i,
-          "price": "1020.0",
+          "id":     7,
+          "kind":   "bid",
+          "at":     created_at.to_i,
+          "price":  "1020.0",
           "volume": "0.001",
           "ask_id": 15,
           "bid_id": 22,
@@ -158,17 +223,16 @@ module Peatio::Injectors
         {
           "trades": [
             {
-              "tid": 7,
+              "tid":        7,
               "taker_type": "buy",
-              "date": created_at.to_i,
-              "price": "1020.0",
+              "date":       created_at.to_i,
+              "price":      "1020.0",
               "amount":
-              "0.001"
+                            "0.001"
             }
           ]
         }
       ]
     end
-
   end
 end

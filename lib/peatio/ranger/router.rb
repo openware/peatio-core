@@ -20,6 +20,19 @@ module Peatio::Ranger
       @connections_by_userid = {}
       @streams_sockets = {}
       @logger = Peatio::Logger.logger
+      @stores = {}
+    end
+
+    def snapshot?(stream)
+      stream.end_with?("-snap")
+    end
+
+    def increment?(stream)
+      stream.end_with?("-inc")
+    end
+
+    def storekey(stream)
+      stream.gsub(/-(snap|inc)$/, "")
     end
 
     def stats
@@ -64,6 +77,15 @@ module Peatio::Ranger
     def on_subscribe(connection, stream)
       @streams_sockets[stream] ||= ConnectionArray.new
       @streams_sockets[stream] << connection
+      send_snapshot_and_increments(connection, storekey(stream)) if increment?(stream)
+    end
+
+    def send_snapshot_and_increments(connection, key)
+      return unless @stores[key]
+      return unless @stores[key][:snapshot]
+
+      connection.send_raw(@stores[key][:snapshot])
+      @stores[key][:increments]&.each {|inc| connection.send_raw(inc) }
     end
 
     def on_unsubscribe(connection, stream)
@@ -71,6 +93,18 @@ module Peatio::Ranger
 
       @streams_sockets[stream].delete(connection)
       @streams_sockets.delete(stream) if @streams_sockets[stream].empty?
+    end
+
+    def send_private_message(user_id, event, payload_decoded)
+      Array(@connections_by_userid[user_id]).each do |connection|
+        connection.send(event, payload_decoded) if connection.streams.include?(event)
+      end
+    end
+
+    def send_public_message(stream, raw_message)
+      Array(@streams_sockets[stream]).each do |connection|
+        connection.send_raw(raw_message)
+      end
     end
 
     #
@@ -90,19 +124,40 @@ module Peatio::Ranger
       payload_decoded = JSON.parse(payload)
 
       if type == "private"
-        Array(@connections_by_userid[id]).each do |connection|
-          connection.send(event, payload_decoded) if connection.streams.include?(event)
-        end
-
+        send_private_message(id, event, payload_decoded)
         return
       end
 
       stream = [id, event].join(".")
       message = JSON.dump(stream => payload_decoded)
 
-      Array(@streams_sockets[stream]).each do |connection|
-        connection.send_raw(message)
+      if snapshot?(event)
+        key = storekey(stream)
+
+        unless @stores[key]
+          # Send the snapshot to subscribers of -inc stream if there were no snapshot before
+          send_public_message("#{key}-inc", message)
+        end
+
+        @stores[key] = {
+          snapshot:   message,
+          increments: [],
+        }
+        return
       end
+
+      if increment?(event)
+        key = storekey(stream)
+
+        unless @stores[key]
+          logger.warn { "Discard increment received before snapshot for store:#{key}" }
+          return
+        end
+
+        @stores[key][:increments] << message
+      end
+
+      send_public_message(stream, message)
     end
   end
 end
