@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 describe Peatio::Ranger::Router do
-  let(:router) { Peatio::Ranger::Router.new() }
-
+  let(:router) { Peatio::Ranger::Router.new(registry) }
+  let(:registry) { Prometheus::Client::Registry.new }
   let(:anonymous1) { OpenStruct.new(authorized: false, user: nil, id: 1, streams: {}) }
   let(:anonymous2) { OpenStruct.new(authorized: false, user: nil, id: 2, streams: {}) }
   let(:user1) { OpenStruct.new(authorized: true, user: "user1", id: 3, streams: {}) }
@@ -38,11 +38,13 @@ describe Peatio::Ranger::Router do
   context "no connection" do
     it "shows empty stats" do
       expect(router.stats).to eq(
-        "==== Stats ====\n" \
-        "Connections: 0\n" \
-        "Authenticated connections: 0\n" \
-        "Streams subscriptions: 0\n" \
-        "Streams kind: 0"
+        "==== Metrics ====\n" \
+        "ranger_connections_total{auth=\"public\"}: 0\n" \
+        "ranger_connections_total{auth=\"private\"}: 0\n" \
+        "ranger_connections_current{auth=\"public\"}: 0\n" \
+        "ranger_connections_current{auth=\"private\"}: 0\n" \
+        "ranger_subscriptions_current: 0\n" \
+        "ranger_streams_kinds: 0"
       )
     end
   end
@@ -110,11 +112,13 @@ describe Peatio::Ranger::Router do
         "another-feed" => [anonymous2]
       )
       expect(router.stats).to eq(
-        "==== Stats ====\n" \
-        "Connections: 2\n" \
-        "Authenticated connections: 0\n" \
-        "Streams subscriptions: 3\n" \
-        "Streams kind: 2"
+        "==== Metrics ====\n" \
+        "ranger_connections_total{auth=\"public\"}: 2\n" \
+        "ranger_connections_total{auth=\"private\"}: 0\n" \
+        "ranger_connections_current{auth=\"public\"}: 2\n" \
+        "ranger_connections_current{auth=\"private\"}: 0\n" \
+        "ranger_subscriptions_current: 3\n" \
+        "ranger_streams_kinds: 2"
       )
 
       # users unsubscribe
