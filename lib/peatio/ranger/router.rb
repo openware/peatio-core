@@ -15,12 +15,34 @@ module Peatio::Ranger
       end
     end
 
-    def initialize
+    def initialize(prometheus=nil)
       @connections = {}
       @connections_by_userid = {}
       @streams_sockets = {}
       @logger = Peatio::Logger.logger
       @stores = {}
+      init_metrics(prometheus)
+    end
+
+    def init_metrics(prometheus)
+      return unless prometheus
+
+      @prometheus = prometheus
+      @metric_connections_total = @prometheus.counter(
+        :ranger_connections_total,
+        docstring: "Total number of connections to ranger from the start",
+        labels:    [:auth]
+      )
+      @metric_connections_current = @prometheus.gauge(
+        :ranger_connections_current,
+        docstring: "Current number of connections to ranger",
+        labels:    [:auth]
+      )
+      @metric_subscriptions_current = @prometheus.gauge(
+        :ranger_subscriptions_current,
+        docstring: "Current number of streams subscriptions to ranger",
+        labels:    [:stream]
+      )
     end
 
     def snapshot?(stream)
@@ -37,11 +59,13 @@ module Peatio::Ranger
 
     def stats
       [
-        "==== Stats ====",
-        "Connections: %d" % [@connections.size],
-        "Authenticated connections: %d" % [@connections_by_userid.each_value.map(&:size).reduce(:+) || 0],
-        "Streams subscriptions: %d" % [@streams_sockets.each_value.map(&:size).reduce(:+) || 0],
-        "Streams kind: %d" % [@streams_sockets.size],
+        "==== Metrics ====",
+        "ranger_connections_total{auth=\"public\"}: %d" % [@metric_connections_total.get(labels: {auth: "public"})],
+        "ranger_connections_total{auth=\"private\"}: %d" % [@metric_connections_total.get(labels: {auth: "private"})],
+        "ranger_connections_current{auth=\"public\"}: %d" % [@metric_connections_current.get(labels: {auth: "public"})],
+        "ranger_connections_current{auth=\"private\"}: %d" % [@metric_connections_current.get(labels: {auth: "private"})],
+        "ranger_subscriptions_current: %d" % [compute_streams_subscriptions()],
+        "ranger_streams_kinds: %d" % [compute_streams_kinds()],
       ].join("\n")
     end
 
@@ -54,9 +78,47 @@ module Peatio::Ranger
       ].join("\n")
     end
 
+    def compute_connections_all
+      @connections.size
+    end
+
+    def compute_connections_private
+      @connections_by_userid.each_value.map(&:size).reduce(0, :+)
+    end
+
+    def compute_stream_subscriptions(stream)
+      @streams_sockets[stream]&.size || 0
+    end
+
+    def compute_streams_subscriptions
+      @streams_sockets.each_value.map(&:size).reduce(0, :+)
+    end
+
+    def compute_streams_kinds
+      @streams_sockets.size
+    end
+
+    def sanity_check_metrics_connections
+      return unless @metric_connections_current
+
+      connections_current_all = @metric_connections_current.values.values.reduce(0, :+)
+      return if connections_current_all == compute_connections_all()
+
+      logger.warn "slip detected in metric_connections_current, recalculating"
+      connections_current_private = compute_connections_private()
+      @metric_connections_current.set(connections_current_private, labels: {auth: "private"})
+      @metric_connections_current.set(compute_connections_all() - connections_current_private, labels: {auth: "public"})
+    end
+
     def on_connection_open(connection)
       @connections[connection.id] = connection
-      return unless connection.authorized
+      unless connection.authorized
+        @metric_connections_current&.increment(labels: {auth: "public"})
+        @metric_connections_total&.increment(labels: {auth: "public"})
+        return
+      end
+      @metric_connections_current&.increment(labels: {auth: "private"})
+      @metric_connections_total&.increment(labels: {auth: "private"})
 
       @connections_by_userid[connection.user] ||= ConnectionArray.new
       @connections_by_userid[connection.user] << connection
@@ -67,17 +129,25 @@ module Peatio::Ranger
       connection.streams.keys.each do |stream|
         on_unsubscribe(connection, stream)
       end
-      return unless connection.authorized
+
+      unless connection.authorized
+        @metric_connections_current&.decrement(labels: {auth: "public"})
+        sanity_check_metrics_connections
+        return
+      end
+      @metric_connections_current&.decrement(labels: {auth: "private"})
 
       @connections_by_userid[connection.user].delete(connection)
       @connections_by_userid.delete(connection.user) \
         if @connections_by_userid[connection.user].empty?
+      sanity_check_metrics_connections
     end
 
     def on_subscribe(connection, stream)
       @streams_sockets[stream] ||= ConnectionArray.new
       @streams_sockets[stream] << connection
       send_snapshot_and_increments(connection, storekey(stream)) if increment?(stream)
+      @metric_subscriptions_current&.set(compute_stream_subscriptions(stream), labels: {stream: stream})
     end
 
     def send_snapshot_and_increments(connection, key)
@@ -93,6 +163,7 @@ module Peatio::Ranger
 
       @streams_sockets[stream].delete(connection)
       @streams_sockets.delete(stream) if @streams_sockets[stream].empty?
+      @metric_subscriptions_current&.set(compute_stream_subscriptions(stream), labels: {stream: stream})
     end
 
     def send_private_message(user_id, event, payload_decoded)

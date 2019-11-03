@@ -18,9 +18,14 @@ module Peatio::Command::Service
 
         raise "stats period missing" if stats? && !stats_period
 
+        Prometheus::Client.config.data_store = Prometheus::Client::DataStores::SingleThreaded.new()
+        registry = Prometheus::Client.registry
+
         opts = {
           display_stats: stats?,
           stats_period:  stats_period.to_f,
+          metrics_port:  8082,
+          registry:      registry
         }
         ::Peatio::Ranger.run!(jwt_public_key, exchange, opts)
       end
