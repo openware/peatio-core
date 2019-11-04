@@ -60,7 +60,7 @@ module Peatio::Ranger
     end
 
     def unsubscribe(unsubscribed_streams)
-      raise "Streams must be an array of strings" unless streams.is_a?(Array)
+      raise "Streams must be an array of strings" unless unsubscribed_streams.is_a?(Array)
 
       unsubscribed_streams.each do |stream|
         stream = stream.to_s

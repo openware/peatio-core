@@ -14,18 +14,20 @@ module Peatio::Injectors
       @seller_uid = 21
       @buyer_uid = 42
       @messages = create_messages
-
+      @opts = {
+        ex_name: exchange_name
+      }
       EventMachine.run do
-        inject_message(Peatio::MQ::Client.new, exchange_name)
+        inject_message()
       end
     end
 
-    def inject_message(client, exchange_name)
+    def inject_message()
       if message = @messages.shift
         type, id, event, data = message
-        client.publish(exchange_name, type, id, event, data)
+        Peatio::Ranger::Events.publish(type, id, event, data, @opts)
         EM.next_tick do
-          inject_message(client, exchange_name)
+          inject_message()
         end
       else
         Peatio::MQ::Client.disconnect
