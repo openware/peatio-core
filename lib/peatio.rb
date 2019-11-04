@@ -23,6 +23,7 @@ module Peatio
   require_relative "peatio/sql/schema"
   require_relative "peatio/mq/client"
   require_relative "peatio/metrics/server"
+  require_relative "peatio/ranger/events"
   require_relative "peatio/ranger/router"
   require_relative "peatio/ranger/connection"
   require_relative "peatio/ranger/web_socket"
