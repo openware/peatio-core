@@ -1,9 +1,9 @@
-describe Peatio::Auth::JWTAuthenticator do
+describe Peatio::Core::Auth::JWTAuthenticator do
 
   let(:rsa_private) { OpenSSL::PKey::RSA.generate(2048) }
   let(:rsa_public) { rsa_private.public_key }
-  let(:auth) { Peatio::Auth::JWTAuthenticator.new(rsa_public, rsa_private) }
-  let(:invalid_auth) { Peatio::Auth::JWTAuthenticator.new(rsa_public, nil) }
+  let(:auth) { Peatio::Core::Auth::JWTAuthenticator.new(rsa_public, rsa_private) }
+  let(:invalid_auth) { Peatio::Core::Auth::JWTAuthenticator.new(rsa_public, nil) }
   let(:token) { auth.encode(payload) }
 
   let :payload do
@@ -32,7 +32,7 @@ describe Peatio::Auth::JWTAuthenticator do
 
     expect do
       auth.authenticate!("Bearer #{token}")
-    end.to raise_error(Peatio::Auth::Error)
+    end.to raise_error(Peatio::Core::Auth::Error)
   end
 
   it 'will raise exception if no private key given for encoding' do
@@ -42,7 +42,7 @@ describe Peatio::Auth::JWTAuthenticator do
   end
 
   it 'will raise exception for invalid jwt (garbage)' do
-    auth = Peatio::Auth::JWTAuthenticator.new(rsa_public, nil)
+    auth = Peatio::Core::Auth::JWTAuthenticator.new(rsa_public, nil)
 
     expect do
       invalid_auth.authenticate!('Bearer garbage')
@@ -65,7 +65,7 @@ describe Peatio::Auth::JWTAuthenticator do
     it 'should validate issuer' do
       expect {
         auth.authenticate!("Bearer #{token}")
-      }.to raise_error(Peatio::Auth::Error)
+      }.to raise_error(Peatio::Core::Auth::Error)
     end
   end
 
@@ -85,7 +85,7 @@ describe Peatio::Auth::JWTAuthenticator do
     it 'should validate audience' do
       expect do
         auth.authenticate!("Bearer #{token}")
-      end.to raise_error(Peatio::Auth::Error)
+      end.to raise_error(Peatio::Core::Auth::Error)
     end
   end
 
@@ -94,7 +94,7 @@ describe Peatio::Auth::JWTAuthenticator do
     it 'should require JTI' do
       expect do
         auth.authenticate!("Bearer #{token}")
-      end.to raise_error(Peatio::Auth::Error)
+      end.to raise_error(Peatio::Core::Auth::Error)
     end
   end
 
@@ -103,7 +103,7 @@ describe Peatio::Auth::JWTAuthenticator do
     it 'should not allow JWT' do
       expect do
         auth.authenticate!("Bearer #{token}")
-      end.to raise_error(Peatio::Auth::Error)
+      end.to raise_error(Peatio::Core::Auth::Error)
     end
   end
 
