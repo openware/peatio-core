@@ -2,7 +2,7 @@ module Peatio::Injectors
   class PeatioEvents
     attr_accessor :market, :market_name, :base_unit, :quote_unit, :seller_uid, :buyer_uid, :logger
 
-    def run!
+    def run!(exchange_name)
       require "time"
       @logger = Peatio::Logger.logger
       @market = "eurusd"
@@ -12,7 +12,7 @@ module Peatio::Injectors
       @seller_uid = 21
       @buyer_uid = 42
       @messages = create_messages
-      @exchange_name = "peatio.events.market"
+      @exchange_name = exchange_name
 
       EventMachine.run do
         Peatio::MQ::Client.new
@@ -161,7 +161,7 @@ module Peatio::Injectors
           "trades": [
             {
               "tid": 7,
-              "type": "buy",
+              "taker_type": "buy",
               "date": created_at.to_i,
               "price": "1020.0",
               "amount":

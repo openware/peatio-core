@@ -1,8 +1,8 @@
 require "socket"
 
 module Peatio::MQ::Events
-  def self.subscribe!
-    ranger = RangerEvents.new
+  def self.subscribe!(exchange_name="peatio.events.ranger")
+    ranger = RangerEvents.new(exchange_name)
     ranger.subscribe
   end
 
@@ -53,8 +53,8 @@ module Peatio::MQ::Events
   class RangerEvents
     attr_accessor :exchange_name
 
-    def initialize
-      @exchange_name = "peatio.events.ranger"
+    def initialize(exchange_name="peatio.events.ranger")
+      @exchange_name = exchange_name
     end
 
     def connect!
@@ -82,7 +82,7 @@ module Peatio::MQ::Events
 
       suffix = "#{Socket.gethostname.split(/-/).last}#{Random.rand(10_000)}"
 
-      queue_name = "#{@topic_name}.ranger.#{suffix}"
+      queue_name = "ranger.#{suffix}"
 
       Peatio::MQ::Client.channel
         .queue(queue_name, durable: false, auto_delete: true)

@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    peatio (0.6.1)
-      activemodel (> 5.2.3, <= 6.0.0)
+    peatio (0.6.2)
+      activemodel (> 5.2, <= 6.0.0)
       amqp
       bunny
       clamp
@@ -50,6 +50,7 @@ GEM
     http_parser.rb (0.6.0)
     i18n (1.7.0)
       concurrent-ruby (~> 1.0)
+    irb (1.0.0)
     jaro_winkler (1.5.1)
     json (2.1.0)
     jwt (2.2.1)
@@ -118,6 +119,7 @@ DEPENDENCIES
   bunny-mock
   em-spec
   em-websocket-client
+  irb
   peatio!
   pry-byebug
   rake (~> 10.0)

@@ -1,6 +1,7 @@
 module Peatio::Command::Service
   class Start < Peatio::Command::Base
     class Ranger < Peatio::Command::Base
+      option ["-e", "--exchange"], "NAME", "exchange name to inject messages to", default: "peatio.events.ranger"
       def execute
         if ENV["JWT_PUBLIC_KEY"].nil?
           raise ArgumentError, "JWT_PUBLIC_KEY was not specified."
@@ -13,7 +14,7 @@ module Peatio::Command::Service
           raise ArgumentError, "JWT_PUBLIC_KEY was set to private key, however it should be public."
         end
 
-        ::Peatio::Ranger.run!(jwt_public_key)
+        ::Peatio::Ranger.run!(jwt_public_key, exchange)
       end
     end
 
