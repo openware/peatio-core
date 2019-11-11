@@ -1,7 +1,5 @@
 require "bundler/setup"
-require "peatio"
-
-require_relative "helpers/socket_helper"
+require "peatio/core"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
