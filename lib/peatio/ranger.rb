@@ -70,7 +70,7 @@ module Peatio::Ranger
       @logger.info "ranger: WebSocket connection openned"
 
       if hs.headers_downcased.key?("authorization")
-        authorized, payload = authenticate(hs.headers["authorization"])
+        authorized, payload = authenticate(hs.headers_downcased["authorization"])
 
         if !authorized
           @logger.info "ranger: #{@client.user} authentication failed"
