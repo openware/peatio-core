@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Command::DB
   class Create < Peatio::Command::Base
     def execute

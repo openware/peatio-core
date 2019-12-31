@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio
   module Wallet
     # @abstract Represents basic wallet interface.

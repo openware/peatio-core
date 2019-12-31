@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio #:nodoc:
 
   # This class represents blockchain block which contains transactions.
