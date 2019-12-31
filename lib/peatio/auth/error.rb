@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Peatio::Auth
-  # Error repesent all errors that can be returned from Auth module.
+  # Error represent all errors that can be returned from Auth module.
   class Error < Peatio::Error
     # @return [String, JWT::*] Reason store underlying reason for given error.
     #
@@ -13,7 +13,7 @@ module Peatio::Auth
 
       super(
         code: 2001,
-        text: "Authorization failed".tap { |t| t << ": #{reason}" if reason },
+        text: %[Authorization failed#{": #{reason}" if reason.present?}]
       )
     end
   end
