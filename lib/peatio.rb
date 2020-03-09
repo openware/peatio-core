@@ -39,6 +39,9 @@ module Peatio
   require_relative "peatio/wallet/error"
   require_relative "peatio/wallet/registry"
 
+  require_relative "peatio/upstream/base"
+  require_relative "peatio/upstream/registry"
+
   require_relative "peatio/transaction"
   require_relative "peatio/block"
 end
