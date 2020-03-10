@@ -1,3 +1,3 @@
 module Peatio
-  VERSION = "2.4.0-alpha"
+  VERSION = "2.4.0"
 end
