@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    peatio (2.4.0)
+    peatio (2.4.2)
       activemodel (> 5.2, <= 6.0.0)
       amqp
       bunny
