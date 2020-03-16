@@ -42,7 +42,7 @@ module Peatio::Ranger
       end
 
       socket.onerror do |e|
-        logger.info { "WebSocket Error: #{e.message}" }
+        logger.error { "WebSocket Error: #{e.message}\n" + e.backtrace.join("\n") }
       end
     end
   end
