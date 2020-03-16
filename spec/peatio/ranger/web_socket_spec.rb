@@ -84,7 +84,6 @@ describe Peatio::Ranger do
         end
       }
     end
-
   end
 
   context "valid token" do
@@ -118,6 +117,44 @@ describe Peatio::Ranger do
             done
           }
           wsc.disconnect { done }
+        end
+      }
+    end
+  end
+
+
+  context "ping command" do
+    it "responds to ping by a pong" do
+      em {
+        EM.add_timer(1) { fail "timeout" }
+        ws_server do |socket|
+          connection = Peatio::Ranger::Connection.new(router, socket, logger)
+
+          socket.onopen do |handshake|
+            connection.handshake(auth, handshake)
+          end
+
+          socket.onerror do |e|
+            logger.error "ranger: WebSocket Error: #{e.message}"
+          end
+
+          socket.onmessage do |msg|
+            connection.handle(msg)
+          end
+        end
+
+
+        EM.add_timer(0.1) do
+          wsc = ws_connect("")
+          wsc.callback do
+            logger.info "Connected"
+            wsc.send_msg "ping"
+          end
+
+          wsc.stream do |message|
+            logger.info "received: #{message.data.inspect}"
+            done if message.data == "pong"
+          end
         end
       }
     end

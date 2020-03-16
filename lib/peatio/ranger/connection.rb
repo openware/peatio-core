@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module Peatio::Ranger
   class Connection
     attr_reader :socket, :user, :authorized, :streams, :logger, :id
@@ -23,7 +21,11 @@ module Peatio::Ranger
     end
 
     def send_raw(payload)
-      logger.debug { "sending to user #{user.inspect} payload: #{payload}" }
+      if user
+        logger.debug { "sending to user #{user.inspect} payload: #{payload}" }
+      else
+        logger.debug { "sending to anonymous payload: #{payload}" }
+      end
       @socket.send(payload)
     end
 
@@ -76,6 +78,11 @@ module Peatio::Ranger
 
     def handle(msg)
       return if msg.to_s.empty?
+
+      if msg =~ /^ping/
+        send_raw("pong")
+        return
+      end
 
       data = JSON.parse(msg)
       case data["event"]
