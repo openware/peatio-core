@@ -80,7 +80,7 @@ module Peatio::Ranger
       return if msg.to_s.empty?
 
       if msg =~ /^ping/
-        send_raw("pong")
+        send_raw(JSON.unparse("pong"))
         return
       end
 

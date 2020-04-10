@@ -153,7 +153,7 @@ describe Peatio::Ranger do
 
           wsc.stream do |message|
             logger.info "received: #{message.data.inspect}"
-            done if message.data == "pong"
+            done if JSON.parse(message.data) == "pong"
           end
         end
       }
