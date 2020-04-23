@@ -33,6 +33,7 @@ module Peatio
 
         @ws.on(:open) do |_e|
           subscribe_trades(@target, @ws)
+          subscribe_orderbook(@target, @ws)
           logger.info { "Websocket connected" }
         end
 
@@ -56,6 +57,10 @@ module Peatio
       end
 
       def subscribe_trades(_market, _ws)
+        method_not_implemented
+      end
+
+      def subscribe_orderbook(_market, _ws)
         method_not_implemented
       end
 

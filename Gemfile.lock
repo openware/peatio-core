@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    peatio (2.4.2)
+    peatio (2.4.4)
       activemodel (> 5.2, <= 6.0.0)
       amqp
       bunny
@@ -103,7 +103,7 @@ GEM
     pry-byebug (3.7.0)
       byebug (~> 11.0)
       pry (~> 0.10)
-    public_suffix (4.0.3)
+    public_suffix (4.0.4)
     rack (2.2.2)
     rainbow (3.0.0)
     rake (13.0.1)
@@ -148,7 +148,7 @@ GEM
       eventmachine (~> 1.0, >= 1.0.4)
       rack (>= 1, < 3)
     thread_safe (0.3.6)
-    tzinfo (1.2.6)
+    tzinfo (1.2.7)
       thread_safe (~> 0.1)
     unicode-display_width (1.6.0)
     websocket (1.2.8)
