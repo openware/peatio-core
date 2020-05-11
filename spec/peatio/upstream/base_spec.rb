@@ -25,7 +25,7 @@ describe Peatio::Upstream::Base do
   let(:trade_msg) {
     {
       amount:     "0.00275200",
-      created_at: "2020-03-11T12:48:18+02:00",
+      created_at: "2020-03-11T10:48:18Z",
       id:         239_434_269,
       market_id:  "btcusd",
       price:      "7818.40000000",

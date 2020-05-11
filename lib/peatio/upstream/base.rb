@@ -93,7 +93,7 @@ module Peatio
           price: trade[:price],
           amount: trade[:amount],
           market_id: @market,
-          created_at: Time.at(trade[:date]).iso8601,
+          created_at: Time.at(trade[:date]).utc.iso8601,
           taker_type: trade[:taker_type]
         }
       end
