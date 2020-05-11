@@ -1,0 +1,29 @@
+---
+kind: pipeline
+name: default
+
+steps:
+  - name: Run rspec for each library
+    image: ruby:2.6
+    commands:
+      - bundle install
+      - bundle exec rspec
+
+  - name: Release gems
+    image: ruby:2.6
+    environment:
+      GEM_CREDENTIALS:
+        from_secret: gem_credentials
+    commands:
+      - mkdir -p ~/.gem
+      - echo $GEM_CREDENTIALS | base64 -d > ~/.gem/credentials
+      - chmod 0600 ~/.gem/credentials
+      - gem build peatio.gemspec
+      - gem push peatio-*.gem
+    when:
+      branch:
+        - master
+
+trigger:
+  event:
+    - push
