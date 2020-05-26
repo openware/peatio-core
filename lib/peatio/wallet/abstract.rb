@@ -34,7 +34,7 @@ module Peatio
       # List of configurable settings.
       #
       # @see #configure
-      SUPPORTED_SETTINGS = %i[wallet currency].freeze
+      SUPPORTED_SETTINGS = %i[wallet currencies].freeze
 
 
       # Abstract constructor.
