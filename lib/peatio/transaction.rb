@@ -53,6 +53,10 @@ module Peatio #:nodoc:
     # return [Integer] transaction number in send-to-many request
     attr_accessor :txout
 
+    # @!attribute [rw] from_address
+    # return [String] transaction source addresses
+    attr_accessor :from_addresses
+
     # @!attribute [rw] to_address
     # return [String] transaction recepient address
     attr_accessor :to_address

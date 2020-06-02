@@ -5,6 +5,7 @@ describe Peatio::Transaction do
     let(:transaction_attrs) do
       { hash:         'txid',
         txout:        2,
+        from_addresses: ['from_address'],
         to_address:   'to_address',
         amount:       10,
         block_number: 1042,
