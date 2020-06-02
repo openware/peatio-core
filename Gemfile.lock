@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    peatio (2.4.4)
+    peatio (2.6.0)
       activemodel (> 5.2, <= 6.0.0)
       amqp
       bunny
@@ -70,7 +70,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday_middleware (0.13.1)
       faraday (>= 0.7.4, < 1.0)
-    faye (1.2.4)
+    faye (1.2.5)
       cookiejar (>= 0.3.0)
       em-http-request (>= 0.3.0)
       eventmachine (>= 0.12.0)
@@ -103,7 +103,7 @@ GEM
     pry-byebug (3.7.0)
       byebug (~> 11.0)
       pry (~> 0.10)
-    public_suffix (4.0.4)
+    public_suffix (4.0.5)
     rack (2.2.2)
     rainbow (3.0.0)
     rake (13.0.1)
