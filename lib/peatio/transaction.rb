@@ -54,7 +54,7 @@ module Peatio #:nodoc:
     attr_accessor :txout
 
     # @!attribute [rw] from_address
-    # return [String] transaction source addresses
+    # return [Array<String>] transaction source addresses
     attr_accessor :from_addresses
 
     # @!attribute [rw] to_address
