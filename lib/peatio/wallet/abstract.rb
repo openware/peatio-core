@@ -36,6 +36,23 @@ module Peatio
       # @see #configure
       SUPPORTED_SETTINGS = %i[wallet currency].freeze
 
+      # Hash of features supported by wallet.
+      #
+      # @abstract
+      #
+      # @see Abstract::SUPPORTED_FEATURES for list of features supported by peatio.
+      #
+      # @!attribute [r] features
+      # @return [Hash] list of features supported by wallet.
+      attr_reader :features
+
+      # List of features supported by peatio.
+      #
+      # @note Features list:
+      #
+      #   skip_deposit_collection - defines if deposit will be collected to 
+      #   hot, warm, cold wallets.
+      SUPPORTED_FEATURES = %i[skip_deposit_collection].freeze
 
       # Abstract constructor.
       #
