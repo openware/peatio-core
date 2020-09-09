@@ -73,6 +73,10 @@ module Peatio #:nodoc:
     # return [String] transaction currency id
     attr_accessor :currency_id
 
+    # @!attribute [rw] options
+    # return [JSON] transaction options
+    attr_accessor :options
+
     validates :to_address,
               :amount,
               :currency_id,
