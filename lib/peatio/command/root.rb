@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "peatio/command/base"
 require "peatio/command/service"
 require "peatio/command/db"

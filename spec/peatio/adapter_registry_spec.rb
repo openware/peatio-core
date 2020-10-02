@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 WalletAdapter = Class.new(Peatio::Blockchain::Abstract)
 BlockchainAdapter = Class.new(Peatio::Wallet::Abstract)
 

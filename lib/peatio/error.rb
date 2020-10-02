@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Peatio::Error < ::StandardError
   @@default_code = 2000
 

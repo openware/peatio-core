@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio
   class AdapterRegistry
     Error = Class.new(StandardError)

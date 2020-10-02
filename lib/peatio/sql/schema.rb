@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Peatio::Sql
   class Schema
     attr_accessor :client
@@ -30,7 +32,7 @@ EOF
 
       statements << "DROP TABLE IF EXISTS `orders`;" if options[:drop_if_exists]
       statements << <<EOF
-CREATE TABLE IF NOT EXISTS`orders` (
+CREATE TABLE IF NOT EXISTS `orders` (
   `id`          INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
   `uid`         INT(11) UNSIGNED NOT NULL,
   `bid`         VARCHAR(5) NOT NULL,
@@ -44,7 +46,7 @@ CREATE TABLE IF NOT EXISTS`orders` (
   `created_at`  DATETIME NOT NULL,
   `updated_at`  DATETIME NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
 EOF
 
       statements << "DROP TABLE IF EXISTS `trades`;" if options[:drop_if_exists]
@@ -61,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `trades` (
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
 EOF
       statements.each do |statement|
         puts statement

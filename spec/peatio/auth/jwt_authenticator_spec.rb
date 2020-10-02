@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 describe Peatio::Auth::JWTAuthenticator do
 
   let(:rsa_private) { OpenSSL::PKey::RSA.generate(2048) }

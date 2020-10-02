@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 describe Peatio::Security::KeyGenerator do
   context "generate key pair" do 
     let(:key_pair) { Peatio::Security::KeyGenerator.new}

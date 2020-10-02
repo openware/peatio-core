@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "peatio/adapter_registry"
 
 module Peatio

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "em-spec/rspec"
 require "bunny-mock"
 
