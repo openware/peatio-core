@@ -40,8 +40,10 @@ module Peatio #:nodoc:
     #   the transaction amount has been successfully transferred
     #
     #   failed - the transaction is failed in the blockchain.
+    #
+    #   rejected - the transaction is rejected by user.
 
-    STATUSES = %w[success pending failed].freeze
+    STATUSES = %w[success pending failed rejected].freeze
 
     DEFAULT_STATUS = 'pending'.freeze
 
