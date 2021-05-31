@@ -18,6 +18,7 @@ module Peatio #:nodoc:
   #       txout: 1,
   #       to_address: '0x9af4f143cd5ecfba0fcdd863c5ef52d5ccb4f3e5',
   #       amount: 0.01,
+  #       fee: 0.0004,
   #       block_number: 7732274,
   #       currency_id: 'eth',
   #       status: 'success'
@@ -67,6 +68,10 @@ module Peatio #:nodoc:
     # return [Decimal] amount of the transaction
     attr_accessor :amount
 
+    # @!attribute [rw] fee
+    # return [Decimal] fee of the transaction
+    attr_accessor :fee
+
     # @!attribute [rw] block_number
     # return [Integer] transaction block number
     attr_accessor :block_number
@@ -97,6 +102,9 @@ module Peatio #:nodoc:
 
     validates :amount,
               numericality: { greater_than_or_equal_to: 0 }
+
+    validates :fee,
+              numericality: { greater_than_or_equal_to: 0 }, allow_blank: true
 
     validates :status, inclusion: { in: STATUSES }
 
