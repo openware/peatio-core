@@ -8,6 +8,7 @@ describe Peatio::Transaction do
         from_addresses: ['from_address'],
         to_address:   'to_address',
         amount:       10,
+        fee:          0.005,
         block_number: 1042,
         currency_id:  'btc',
         status:       'pending' }
@@ -75,6 +76,11 @@ describe Peatio::Transaction do
         expect(Peatio::Transaction.new(transaction_attrs).valid?).to be_falsey
       end
 
+      it 'validates fee to be number' do
+        transaction_attrs[:fee] = 'abc'
+        expect(Peatio::Transaction.new(transaction_attrs).valid?).to be_falsey
+      end
+
       it 'validates block_number to be number' do
         transaction_attrs[:block_number] = 'abc'
         expect(Peatio::Transaction.new(transaction_attrs).valid?).to be_falsey
@@ -100,6 +106,7 @@ describe Peatio::Transaction do
         txout:        2,
         to_address:   'to_address',
         amount:       10,
+        fee:          0.08,
         block_number: 1042,
         currency_id:  'btc',
         status:       'pending' }
@@ -122,6 +129,7 @@ describe Peatio::Transaction do
         txout:        2,
         to_address:   'to_address',
         amount:       10,
+        fee:          0.08,
         block_number: 1042,
         currency_id:  'btc',
         status:       'pending' }
