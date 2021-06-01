@@ -21,6 +21,7 @@ module Peatio #:nodoc:
   #       fee: 0.0004,
   #       block_number: 7732274,
   #       currency_id: 'eth',
+  #       fee_currency_id: 'eth',
   #       status: 'success'
   #     }
   #   )
@@ -79,6 +80,10 @@ module Peatio #:nodoc:
     # @!attribute [rw] currency_id
     # return [String] transaction currency id
     attr_accessor :currency_id
+
+    # @!attribute [rw] fee_currency_id
+    # return [String] transaction fee currency id
+    attr_accessor :fee_currency_id
 
     # @!attribute [rw] options
     # return [JSON] transaction options
