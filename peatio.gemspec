@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{^bin/}) {|f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "activemodel", "> 5.2", "<= 6.0.0"
+  spec.add_dependency "activemodel", "> 5.2"
   spec.add_dependency "amqp"
   spec.add_dependency "bunny"
   spec.add_dependency "clamp"
@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "thin"
 
   spec.add_development_dependency "bump"
-  spec.add_development_dependency "bundler", "~> 1.16"
+  spec.add_development_dependency "bundler", "~> 2.4.7"
   spec.add_development_dependency "bunny-mock"
   spec.add_development_dependency "em-spec"
   spec.add_development_dependency "em-websocket-client"
