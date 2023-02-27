@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    peatio (3.1.0)
+    peatio (3.1.1)
       activemodel (> 5.2)
       amqp
       bunny
@@ -9,7 +9,7 @@ PATH
       em-synchrony (~> 1.0)
       em-websocket
       eventmachine
-      faraday_middleware (~> 0.13.1)
+      faraday (~> 1.10)
       faye (~> 1.2)
       jwt
       mysql2
@@ -67,10 +67,29 @@ GEM
       eventmachine
       websocket
     eventmachine (1.2.7)
-    faraday (0.17.6)
-      multipart-post (>= 1.2, < 3)
-    faraday_middleware (0.13.1)
-      faraday (>= 0.7.4, < 1.0)
+    faraday (1.10.3)
+      faraday-em_http (~> 1.0)
+      faraday-em_synchrony (~> 1.0)
+      faraday-excon (~> 1.1)
+      faraday-httpclient (~> 1.0)
+      faraday-multipart (~> 1.0)
+      faraday-net_http (~> 1.0)
+      faraday-net_http_persistent (~> 1.0)
+      faraday-patron (~> 1.0)
+      faraday-rack (~> 1.0)
+      faraday-retry (~> 1.0)
+      ruby2_keywords (>= 0.0.4)
+    faraday-em_http (1.0.0)
+    faraday-em_synchrony (1.0.0)
+    faraday-excon (1.1.0)
+    faraday-httpclient (1.0.1)
+    faraday-multipart (1.0.4)
+      multipart-post (~> 2)
+    faraday-net_http (1.0.1)
+    faraday-net_http_persistent (1.2.0)
+    faraday-patron (1.0.0)
+    faraday-rack (1.0.0)
+    faraday-retry (1.0.3)
     faye (1.4.0)
       cookiejar (>= 0.3.0)
       em-http-request (>= 1.1.6)
@@ -153,6 +172,7 @@ GEM
       rack (>= 1.1)
       rubocop (>= 1.33.0, < 2.0)
     ruby-progressbar (1.11.0)
+    ruby2_keywords (0.0.5)
     set (1.0.3)
     simplecov (0.22.0)
       docile (~> 1.1)
@@ -180,7 +200,7 @@ GEM
     zeitwerk (2.6.7)
 
 PLATFORMS
-  arm64-darwin-21
+  ruby
 
 DEPENDENCIES
   bump
